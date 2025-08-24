@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TermsPolicyStepProps {
   data: TermsPolicy;
@@ -47,7 +48,7 @@ export function TermsPolicyStep({ data, updateData }: TermsPolicyStepProps) {
 
       <div className="space-y-4">
         <div>
-          <Label htmlFor="signature">Signature *</Label>
+          <Label htmlFor="signature">Digital Signature *</Label>
           <Input
             id="signature"
             value={data.signature}
@@ -58,24 +59,11 @@ export function TermsPolicyStep({ data, updateData }: TermsPolicyStepProps) {
         </div>
 
         <div>
-          <Label htmlFor="fullNameConfirm">Full Name *</Label>
-          <Input
-            id="fullNameConfirm"
-            value={data.fullName}
-            onChange={(e) => updateData('fullName', e.target.value)}
-            placeholder="Full Name"
-            required
-          />
-        </div>
-
-        <div>
           <Label htmlFor="date">Date *</Label>
-          <Input
-            id="date"
-            type="date"
-            value={data.date}
-            onChange={(e) => updateData('date', e.target.value)}
-            required
+          <DatePicker
+            selected={data.date ? new Date(data.date) : undefined}
+            onChange={(date) => updateData('date', date ? date.toISOString().split('T')[0] : '')}
+            placeholder="Select today's date"
           />
         </div>
       </div>

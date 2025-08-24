@@ -169,8 +169,13 @@ export function PersonalInfoStep({ data, updateData }: PersonalInfoStepProps) {
           <Label htmlFor="telephone">Telephone/Mobile *</Label>
           <Input
             id="telephone"
+            type="tel"
             value={data.telephone}
-            onChange={(e) => updateData('telephone', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+              updateData('telephone', value);
+            }}
+            placeholder="Enter your phone number"
             required
           />
         </div>

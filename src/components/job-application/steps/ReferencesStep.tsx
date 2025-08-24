@@ -98,8 +98,12 @@ export function ReferencesStep({ data, employmentHistory, updateData }: Referenc
             <div>
               <Label>Contact Number *</Label>
               <Input
+                type="tel"
                 value={data.reference1?.contactNumber || ''}
-                onChange={(e) => updateReference('reference1', 'contactNumber', e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                  updateReference('reference1', 'contactNumber', value);
+                }}
                 placeholder="Contact Number"
                 required
               />
@@ -189,8 +193,12 @@ export function ReferencesStep({ data, employmentHistory, updateData }: Referenc
             <div>
               <Label>Contact Number *</Label>
               <Input
+                type="tel"
                 value={data.reference2?.contactNumber || ''}
-                onChange={(e) => updateReference('reference2', 'contactNumber', e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                  updateReference('reference2', 'contactNumber', value);
+                }}
                 placeholder="Contact Number"
                 required
               />

@@ -226,12 +226,6 @@ function JobApplicationPortalContent() {
             <p className="text-muted-foreground">
               Thank you for your interest in joining our team. We have received your application and will review it shortly.
             </p>
-            <p className="text-sm text-muted-foreground">
-              You should receive a confirmation email at <strong>{formData.personalInfo.email}</strong> within the next few minutes.
-            </p>
-            <Button variant="outline" onClick={handleDownloadPdf} className="w-full">
-              Download a copy (PDF)
-            </Button>
             <Button onClick={() => {
               // Reset form data and redirect to start fresh application
               setFormData(initialFormData);
@@ -324,7 +318,7 @@ function JobApplicationPortalContent() {
           return true;
         });
       case 8:
-        return formData.termsPolicy.consentToTerms && formData.termsPolicy.signature && formData.termsPolicy.fullName && formData.termsPolicy.date;
+        return formData.termsPolicy.consentToTerms && formData.termsPolicy.signature && formData.termsPolicy.date;
       default:
         return true;
     }
@@ -403,24 +397,16 @@ function JobApplicationPortalContent() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
               </Button>
-              <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setIsReviewOpen(true)}>
-                  Preview
-                </Button>
-                {currentStep === totalSteps ? (
-                  <>
-                    <Button variant="outline" onClick={handleDownloadPdf}>
-                      Download PDF
-                    </Button>
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!canProceed() || isSubmitting}
-                      className="min-w-[120px]"
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                    </Button>
-                  </>
-                ) : (
+          <div className="flex gap-2">
+            {currentStep === totalSteps ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={!canProceed() || isSubmitting}
+                className="min-w-[120px]"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Application'}
+              </Button>
+            ) : (
                   <Button
                     onClick={nextStep}
                     disabled={!canProceed()}
@@ -432,20 +418,6 @@ function JobApplicationPortalContent() {
               </div>
             </div>
 
-            <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Review your application</DialogTitle>
-                  <DialogDescription>Check your details before submitting.</DialogDescription>
-                </DialogHeader>
-                <ReviewSummary data={formData} />
-                <div className="flex justify-end gap-2 mt-6">
-                  <Button variant="outline" onClick={handleDownloadJson}>Download JSON</Button>
-                  <Button variant="outline" onClick={handleDownloadPdf}>Download PDF</Button>
-                  <Button onClick={() => setIsReviewOpen(false)}>Close</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </CardContent>
         </Card>
       </div>
