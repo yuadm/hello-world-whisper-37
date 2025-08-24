@@ -3,7 +3,7 @@ import fontkit from '@pdf-lib/fontkit'
 import DejaVuSansRegularUrl from '@/assets/fonts/dejavu/DejaVuSans.ttf'
 import DejaVuSansBoldUrl from '@/assets/fonts/dejavu/DejaVuSans-Bold.ttf'
 import { format } from 'date-fns'
-import type { SupervisionFormData } from '@/components/compliance/SupervisionFormDialog'
+import type { SupervisionFormData, BodyMarker } from '@/components/compliance/SupervisionFormDialog'
 
 interface CompanyInfo {
   name?: string
@@ -179,6 +179,55 @@ export async function generateSupervisionPdf(data: SupervisionFormData, company?
     y -= lineHeight
   }
 
+  const drawBodyDiagram = (title: string, markers: BodyMarker[]) => {
+    const diagramHeight = 200
+    const diagramWidth = 150
+    
+    ensureSpace(diagramHeight + 40)
+    
+    // Title
+    drawTextLine(title, { bold: true })
+    y -= 10
+    
+    // Simple body outline (basic stick figure)
+    const startX = marginX + 20
+    const startY = y - 20
+    
+    // Head
+    page.drawCircle({ x: startX + diagramWidth/2, y: startY - 20, size: 15, borderColor: divider, borderWidth: 1 })
+    
+    // Body
+    page.drawLine({ start: { x: startX + diagramWidth/2, y: startY - 35 }, end: { x: startX + diagramWidth/2, y: startY - 120 }, color: divider, thickness: 2 })
+    
+    // Arms
+    page.drawLine({ start: { x: startX + diagramWidth/2 - 30, y: startY - 60 }, end: { x: startX + diagramWidth/2 + 30, y: startY - 60 }, color: divider, thickness: 2 })
+    
+    // Legs
+    page.drawLine({ start: { x: startX + diagramWidth/2, y: startY - 120 }, end: { x: startX + diagramWidth/2 - 25, y: startY - 180 }, color: divider, thickness: 2 })
+    page.drawLine({ start: { x: startX + diagramWidth/2, y: startY - 120 }, end: { x: startX + diagramWidth/2 + 25, y: startY - 180 }, color: divider, thickness: 2 })
+    
+    // Draw markers
+    markers.forEach((marker, index) => {
+      const markerX = startX + (marker.x / 400) * diagramWidth
+      const markerY = startY - (marker.y / 550) * 160
+      
+      // Red circle for marker
+      page.drawCircle({ x: markerX, y: markerY, size: 6, color: rgb(0.8, 0.2, 0.2), borderColor: rgb(1, 1, 1), borderWidth: 1 })
+      
+      // Body part label
+      page.drawText(`${index + 1}`, { x: markerX - 3, y: markerY - 3, size: 8, font: boldFont, color: rgb(1, 1, 1) })
+    })
+    
+    // Legend
+    let legendY = startY - 190
+    markers.forEach((marker, index) => {
+      page.drawText(`${index + 1}. ${marker.bodyPart}`, { x: startX + diagramWidth + 20, y: legendY, size: 10, font, color: textColor })
+      legendY -= 12
+    })
+    
+    y -= diagramHeight + 20
+  }
+
   const drawKeyVal = (label: string, value?: string) => {
     const labelText = `${label}: `
     const labelSize = 11
@@ -351,7 +400,18 @@ export async function generateSupervisionPdf(data: SupervisionFormData, company?
     drawYesNoQuestionBox('Safeguarding issues', su.safeguardingIssues)
     drawYesNoQuestionBox('Other discussion', su.otherDiscussion)
     drawYesNoQuestionBox('Bruises', su.bruises, su.bruises?.value === 'yes' && su.bruisesCauses ? { label: 'Bruises causes', value: su.bruisesCauses } : undefined)
+    
+    // Body diagram for bruises
+    if (su.bruises?.value === 'yes' && su.bruisesLocations && su.bruisesLocations.length > 0) {
+      drawBodyDiagram('Bruise Locations', su.bruisesLocations)
+    }
+    
     drawYesNoQuestionBox('Pressure sores', su.pressureSores)
+    
+    // Body diagram for pressure sores
+    if (su.pressureSores?.value === 'yes' && su.pressureSoresLocations && su.pressureSoresLocations.length > 0) {
+      drawBodyDiagram('Pressure Sore Locations', su.pressureSoresLocations)
+    }
   }
 
   // Office Use

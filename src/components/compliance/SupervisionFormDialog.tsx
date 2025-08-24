@@ -17,8 +17,15 @@ import { useCompany } from "@/contexts/CompanyContext";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BodyDiagramModal from "./BodyDiagramModal";
 
 export type YesNo = "yes" | "no";
+
+export interface BodyMarker {
+  x: number;
+  y: number;
+  bodyPart: string;
+}
 
 export interface SupervisionServiceUserQA {
   serviceUserName: string;
@@ -30,7 +37,9 @@ export interface SupervisionServiceUserQA {
   otherDiscussion?: { value?: YesNo; reason?: string };
   bruises?: { value?: YesNo; reason?: string };
   bruisesCauses?: string;
+  bruisesLocations?: BodyMarker[];
   pressureSores?: { value?: YesNo; reason?: string };
+  pressureSoresLocations?: BodyMarker[];
 }
 
 export interface OfficeActionItem {
@@ -87,6 +96,11 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
 
   const [step, setStep] = useState<number>(1); // 1: personal, 2: service users list, 3..n: per user, last: office
   const [showPersonalErrors, setShowPersonalErrors] = useState(false);
+  const [bodyDiagramModal, setBodyDiagramModal] = useState<{
+    open: boolean;
+    type: "bruises" | "pressureSores";
+    serviceUserIndex: number;
+  }>({ open: false, type: "bruises", serviceUserIndex: -1 });
 
   const [form, setForm] = useState<SupervisionFormData>({
     dateOfSupervision: "",
@@ -259,19 +273,56 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
     onOpenChange(false);
   };
 
-  const renderYN = (label: string, obj: { value?: YesNo; reason?: string } | undefined, onChange: (next: { value?: YesNo; reason?: string }) => void) => {
+  const openBodyDiagram = (type: "bruises" | "pressureSores", serviceUserIndex: number) => {
+    setBodyDiagramModal({ open: true, type, serviceUserIndex });
+  };
+
+  const saveBodyDiagram = (markers: BodyMarker[]) => {
+    const { type, serviceUserIndex } = bodyDiagramModal;
+    if (type === "bruises") {
+      updatePerUser(serviceUserIndex, { bruisesLocations: markers });
+    } else {
+      updatePerUser(serviceUserIndex, { pressureSoresLocations: markers });
+    }
+    setBodyDiagramModal({ open: false, type: "bruises", serviceUserIndex: -1 });
+  };
+
+  const renderYN = (label: string, obj: { value?: YesNo; reason?: string } | undefined, onChange: (next: { value?: YesNo; reason?: string }) => void, showBodyDiagram?: { type: "bruises" | "pressureSores", serviceUserIndex: number, locations?: BodyMarker[] }) => {
     return (
       <div className="space-y-2">
         <Label>{label}</Label>
         <div className="flex items-center gap-3">
-          <Button variant={obj?.value === "yes" ? "default" : "outline"} size="sm" onClick={() => onChange(setYN(obj, "yes"))}>
+          <Button 
+            variant={obj?.value === "yes" ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => {
+              onChange(setYN(obj, "yes"));
+              if (showBodyDiagram && obj?.value !== "yes") {
+                setTimeout(() => openBodyDiagram(showBodyDiagram.type, showBodyDiagram.serviceUserIndex), 100);
+              }
+            }}
+          >
             <Check className="h-4 w-4" />
           </Button>
           <Button variant={obj?.value === "no" ? "destructive" : "outline"} size="sm" onClick={() => onChange(setYN(obj, "no"))}>
             <X className="h-4 w-4" />
           </Button>
+          {showBodyDiagram && obj?.value === "yes" && (
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => openBodyDiagram(showBodyDiagram.type, showBodyDiagram.serviceUserIndex)}
+            >
+              Mark Body Locations
+            </Button>
+          )}
         </div>
         <Input placeholder={obj?.value === "yes" ? "Reason required" : "None"} value={obj?.reason || (obj?.value === "no" ? "None" : "")} onChange={(e) => onChange({ ...(obj || {}), reason: e.target.value })} />
+        {showBodyDiagram && showBodyDiagram.locations && showBodyDiagram.locations.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Marked locations: {showBodyDiagram.locations.map(l => l.bodyPart).join(", ")}
+          </div>
+        )}
       </div>
     );
   };
@@ -410,12 +461,12 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
           {renderYN("Any complaint the service user made regarding the service by you, other carers or the agency?", su.complaintsByServiceUser, (v) => updatePerUser(index, { complaintsByServiceUser: v }))}
           {renderYN("Have you noticed any safeguarding issues with this client?", su.safeguardingIssues, (v) => updatePerUser(index, { safeguardingIssues: v }))}
           {renderYN("Is there anything else you want to discuss?", su.otherDiscussion, (v) => updatePerUser(index, { otherDiscussion: v }))}
-          {renderYN("Are there any bruises with service user?", su.bruises, (v) => updatePerUser(index, { bruises: v }))}
+          {renderYN("Are there any bruises with service user?", su.bruises, (v) => updatePerUser(index, { bruises: v }), { type: "bruises", serviceUserIndex: index, locations: su.bruisesLocations })}
           <div className="space-y-1 md:col-span-2">
             <Label>What are the causes for these bruises</Label>
             <Input value={su.bruisesCauses || ""} onChange={(e) => updatePerUser(index, { bruisesCauses: e.target.value })} disabled={su.bruises?.value !== "yes"} placeholder={su.bruises?.value === "yes" ? "Describe causes" : "N/A"} />
           </div>
-          {renderYN("Are there any pressure sores with service user?", su.pressureSores, (v) => updatePerUser(index, { pressureSores: v }))}
+          {renderYN("Are there any pressure sores with service user?", su.pressureSores, (v) => updatePerUser(index, { pressureSores: v }), { type: "pressureSores", serviceUserIndex: index, locations: su.pressureSoresLocations })}
         </div>
         <div className="pt-2 flex justify-between">
           <Button variant="outline" onClick={handleBack}>Back</Button>
@@ -491,23 +542,39 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-lg md:max-w-4xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Complete Supervision</DialogTitle>
-          <DialogDescription>Fill out the supervision form below</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-[95vw] sm:max-w-lg md:max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Complete Supervision</DialogTitle>
+            <DialogDescription>Fill out the supervision form below</DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Progress (minimal) */}
-          <div className="text-sm text-muted-foreground">Step {step} of {totalSteps}</div>
+          <div className="space-y-6">
+            {/* Progress (minimal) */}
+            <div className="text-sm text-muted-foreground">Step {step} of {totalSteps}</div>
 
-          {step === 1 && renderPersonal()}
-          {step === 2 && renderServiceUsersList()}
-          {step >= 3 && currentServiceUserIndex >= 0 && currentServiceUserIndex < Math.max(1, form.serviceUsersCount) && renderPerServiceUser(currentServiceUserIndex)}
-          {step === 2 + Math.max(1, form.serviceUsersCount) + 1 && renderOffice()}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {step === 1 && renderPersonal()}
+            {step === 2 && renderServiceUsersList()}
+            {step >= 3 && currentServiceUserIndex >= 0 && currentServiceUserIndex < Math.max(1, form.serviceUsersCount) && renderPerServiceUser(currentServiceUserIndex)}
+            {step === 2 + Math.max(1, form.serviceUsersCount) + 1 && renderOffice()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <BodyDiagramModal
+        open={bodyDiagramModal.open}
+        onOpenChange={(open) => setBodyDiagramModal(prev => ({ ...prev, open }))}
+        onSave={saveBodyDiagram}
+        title={bodyDiagramModal.type === "bruises" ? "Mark Bruise Locations" : "Mark Pressure Sore Locations"}
+        initialMarkers={
+          bodyDiagramModal.serviceUserIndex >= 0 
+            ? (bodyDiagramModal.type === "bruises" 
+                ? form.perServiceUser[bodyDiagramModal.serviceUserIndex]?.bruisesLocations 
+                : form.perServiceUser[bodyDiagramModal.serviceUserIndex]?.pressureSoresLocations) || []
+            : []
+        }
+      />
+    </>
   );
 }
