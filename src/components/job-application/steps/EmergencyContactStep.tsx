@@ -97,8 +97,12 @@ export function EmergencyContactStep({ data, updateData }: EmergencyContactStepP
           <Label htmlFor="emergencyContactNumber">Contact number *</Label>
           <Input
             id="emergencyContactNumber"
+            type="tel"
             value={data.contactNumber}
-            onChange={(e) => updateData('contactNumber', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+              updateData('contactNumber', value);
+            }}
             placeholder="Contact number"
             required
           />

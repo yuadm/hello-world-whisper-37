@@ -101,7 +101,7 @@ export function ReferencesStep({ data, employmentHistory, updateData }: Referenc
                 type="tel"
                 value={data.reference1?.contactNumber || ''}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                  const value = e.target.value.replace(/[^0-9]/g, '');
                   updateReference('reference1', 'contactNumber', value);
                 }}
                 placeholder="Contact Number"
@@ -196,7 +196,7 @@ export function ReferencesStep({ data, employmentHistory, updateData }: Referenc
                 type="tel"
                 value={data.reference2?.contactNumber || ''}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                  const value = e.target.value.replace(/[^0-9]/g, '');
                   updateReference('reference2', 'contactNumber', value);
                 }}
                 placeholder="Contact Number"

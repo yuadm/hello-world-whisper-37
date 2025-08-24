@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { DateTextPicker } from '@/components/ui/date-text-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface PersonalInfoStepProps {
   data: PersonalInfo;
@@ -186,16 +186,12 @@ export function PersonalInfoStep({ data, updateData }: PersonalInfoStepProps) {
 
         <div>
           <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-          <DateTextPicker
-            value={data.dateOfBirth ? new Date(data.dateOfBirth) : data.dateOfBirth}
-            onChange={(value) => {
-              if (value instanceof Date) {
-                updateData('dateOfBirth', value.toISOString().split('T')[0]);
-              } else {
-                updateData('dateOfBirth', value || '');
-              }
+          <DatePicker
+            selected={data.dateOfBirth ? new Date(data.dateOfBirth) : undefined}
+            onChange={(date) => {
+              updateData('dateOfBirth', date ? date.toISOString().split('T')[0] : '');
             }}
-            placeholder="Select date of birth or enter text"
+            placeholder="Select date of birth"
           />
         </div>
 

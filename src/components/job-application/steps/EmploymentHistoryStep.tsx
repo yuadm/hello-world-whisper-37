@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus } from 'lucide-react';
-import { DateTextPicker } from '@/components/ui/date-text-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface EmploymentHistoryStepProps {
   data: EmploymentHistory;
@@ -152,7 +152,7 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                     type="tel"
                     value={data.recentEmployer?.telephone || ''}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                      const value = e.target.value.replace(/[^0-9]/g, '');
                       updateRecentEmployer('telephone', value);
                     }}
                     placeholder="Contact Number"
@@ -160,44 +160,32 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                 </div>
                 <div>
                   <Label>From *</Label>
-                  <DateTextPicker
-                    value={data.recentEmployer?.from ? new Date(data.recentEmployer.from) : data.recentEmployer?.from}
-                    onChange={(value) => {
-                      if (value instanceof Date) {
-                        updateRecentEmployer('from', value.toISOString().split('T')[0]);
-                      } else {
-                        updateRecentEmployer('from', value || '');
-                      }
+                  <DatePicker
+                    selected={data.recentEmployer?.from ? new Date(data.recentEmployer.from) : undefined}
+                    onChange={(date) => {
+                      updateRecentEmployer('from', date ? date.toISOString().split('T')[0] : '');
                     }}
-                    placeholder="Select start date or enter text"
+                    placeholder="Select start date"
                   />
                 </div>
                 <div>
                   <Label>To *</Label>
-                  <DateTextPicker
-                    value={data.recentEmployer?.to ? new Date(data.recentEmployer.to) : data.recentEmployer?.to}
-                    onChange={(value) => {
-                      if (value instanceof Date) {
-                        updateRecentEmployer('to', value.toISOString().split('T')[0]);
-                      } else {
-                        updateRecentEmployer('to', value || '');
-                      }
+                  <DatePicker
+                    selected={data.recentEmployer?.to ? new Date(data.recentEmployer.to) : undefined}
+                    onChange={(date) => {
+                      updateRecentEmployer('to', date ? date.toISOString().split('T')[0] : '');
                     }}
-                    placeholder="Select end date or enter text"
+                    placeholder="Select end date"
                   />
                 </div>
                 <div>
                   <Label>Leaving date or notice (if relevant)</Label>
-                  <DateTextPicker
-                    value={data.recentEmployer?.leavingDate ? new Date(data.recentEmployer.leavingDate) : data.recentEmployer?.leavingDate}
-                    onChange={(value) => {
-                      if (value instanceof Date) {
-                        updateRecentEmployer('leavingDate', value.toISOString().split('T')[0]);
-                      } else {
-                        updateRecentEmployer('leavingDate', value || '');
-                      }
+                  <DatePicker
+                    selected={data.recentEmployer?.leavingDate ? new Date(data.recentEmployer.leavingDate) : undefined}
+                    onChange={(date) => {
+                      updateRecentEmployer('leavingDate', date ? date.toISOString().split('T')[0] : '');
                     }}
-                    placeholder="Select leaving date or enter text"
+                    placeholder="Select leaving date"
                   />
                 </div>
               </div>
@@ -317,7 +305,7 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                         type="tel"
                         value={employer.telephone}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                          const value = e.target.value.replace(/[^0-9]/g, '');
                           updatePreviousEmployer(index, 'telephone', value);
                         }}
                         placeholder="Contact Number"
@@ -325,44 +313,32 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                     </div>
                     <div>
                       <Label>From *</Label>
-                      <DateTextPicker
-                        value={employer.from ? new Date(employer.from) : employer.from}
-                        onChange={(value) => {
-                          if (value instanceof Date) {
-                            updatePreviousEmployer(index, 'from', value.toISOString().split('T')[0]);
-                          } else {
-                            updatePreviousEmployer(index, 'from', value || '');
-                          }
+                      <DatePicker
+                        selected={employer.from ? new Date(employer.from) : undefined}
+                        onChange={(date) => {
+                          updatePreviousEmployer(index, 'from', date ? date.toISOString().split('T')[0] : '');
                         }}
-                        placeholder="Select start date or enter text"
+                        placeholder="Select start date"
                       />
                     </div>
                     <div>
                       <Label>To *</Label>
-                      <DateTextPicker
-                        value={employer.to ? new Date(employer.to) : employer.to}
-                        onChange={(value) => {
-                          if (value instanceof Date) {
-                            updatePreviousEmployer(index, 'to', value.toISOString().split('T')[0]);
-                          } else {
-                            updatePreviousEmployer(index, 'to', value || '');
-                          }
+                      <DatePicker
+                        selected={employer.to ? new Date(employer.to) : undefined}
+                        onChange={(date) => {
+                          updatePreviousEmployer(index, 'to', date ? date.toISOString().split('T')[0] : '');
                         }}
-                        placeholder="Select end date or enter text"
+                        placeholder="Select end date"
                       />
                     </div>
                     <div>
                       <Label>Leaving date or notice (if relevant)</Label>
-                      <DateTextPicker
-                        value={employer.leavingDate ? new Date(employer.leavingDate) : employer.leavingDate}
-                        onChange={(value) => {
-                          if (value instanceof Date) {
-                            updatePreviousEmployer(index, 'leavingDate', value.toISOString().split('T')[0]);
-                          } else {
-                            updatePreviousEmployer(index, 'leavingDate', value || '');
-                          }
+                      <DatePicker
+                        selected={employer.leavingDate ? new Date(employer.leavingDate) : undefined}
+                        onChange={(date) => {
+                          updatePreviousEmployer(index, 'leavingDate', date ? date.toISOString().split('T')[0] : '');
                         }}
-                        placeholder="Select leaving date or enter text"
+                        placeholder="Select leaving date"
                       />
                     </div>
                   </div>
