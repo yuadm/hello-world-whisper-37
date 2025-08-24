@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -680,7 +681,9 @@ function ApplicationDetails({
         .update({
           personal_info: editData.personal_info,
           availability: editData.availability,
+          emergency_contact: editData.emergency_contact,
           employment_history: editData.employment_history,
+          reference_info: editData.reference_info,
           skills_experience: editData.skills_experience,
           declarations: editData.declarations,
           consent: editData.consent
@@ -809,8 +812,101 @@ function EditableApplicationContent({
   setEditData: (data: any) => void;
   onSendReferenceEmail: (app: JobApplication, refIndex: number) => void;
 }) {
+  // Initialize missing objects if they don't exist
+  const initializeData = () => {
+    const initialized = { ...editData };
+    if (!initialized.personal_info) initialized.personal_info = {};
+    if (!initialized.availability) initialized.availability = {};
+    if (!initialized.emergency_contact) initialized.emergency_contact = {};
+    if (!initialized.employment_history) initialized.employment_history = {};
+    if (!initialized.reference_info) initialized.reference_info = {};
+    if (!initialized.skills_experience) initialized.skills_experience = {};
+    if (!initialized.declarations) initialized.declarations = {};
+    if (!initialized.consent) initialized.consent = {};
+    
+    // Initialize nested objects
+    if (!initialized.employment_history.recentEmployer) initialized.employment_history.recentEmployer = {};
+    if (!initialized.employment_history.previousEmployers) initialized.employment_history.previousEmployers = [];
+    if (!initialized.reference_info.reference1) initialized.reference_info.reference1 = {};
+    if (!initialized.reference_info.reference2) initialized.reference_info.reference2 = {};
+    if (!initialized.availability.timeSlots) initialized.availability.timeSlots = {};
+    
+    return initialized;
+  };
+
+  const safeEditData = initializeData();
+
+  const updatePersonalInfo = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      personal_info: { ...editData.personal_info, [field]: value }
+    });
+  };
+
+  const updateAvailability = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      availability: { ...editData.availability, [field]: value }
+    });
+  };
+
+  const updateEmergencyContact = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      emergency_contact: { ...editData.emergency_contact, [field]: value }
+    });
+  };
+
+  const updateEmploymentHistory = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      employment_history: { ...editData.employment_history, [field]: value }
+    });
+  };
+
+  const updateRecentEmployer = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      employment_history: { 
+        ...editData.employment_history, 
+        recentEmployer: { ...editData.employment_history?.recentEmployer, [field]: value }
+      }
+    });
+  };
+
+  const updateReference = (refKey: 'reference1' | 'reference2', field: string, value: any) => {
+    setEditData({
+      ...editData,
+      reference_info: {
+        ...editData.reference_info,
+        [refKey]: { ...editData.reference_info?.[refKey], [field]: value }
+      }
+    });
+  };
+
+  const updateSkillsExperience = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      skills_experience: { ...editData.skills_experience, [field]: value }
+    });
+  };
+
+  const updateDeclarations = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      declarations: { ...editData.declarations, [field]: value }
+    });
+  };
+
+  const updateConsent = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      consent: { ...editData.consent, [field]: value }
+    });
+  };
+
   return (
-    <>
+    <div className="space-y-6">
       {/* Personal Information */}
       <Card>
         <CardHeader>
@@ -819,84 +915,157 @@ function EditableApplicationContent({
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Full Name</label>
+              <label className="text-sm font-medium text-gray-500">Title</label>
               <Input
-                value={editData.personal_info?.fullName || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, fullName: e.target.value }
-                })}
+                value={safeEditData.personal_info?.title || ''}
+                onChange={(e) => updatePersonalInfo('title', e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Title</label>
+              <label className="text-sm font-medium text-gray-500">Full Name</label>
               <Input
-                value={editData.personal_info?.title || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, title: e.target.value }
-                })}
+                value={safeEditData.personal_info?.fullName || ''}
+                onChange={(e) => updatePersonalInfo('fullName', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Email</label>
               <Input
-                value={editData.personal_info?.email || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, email: e.target.value }
-                })}
+                value={safeEditData.personal_info?.email || ''}
+                onChange={(e) => updatePersonalInfo('email', e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Phone</label>
+              <label className="text-sm font-medium text-gray-500">Confirm Email</label>
               <Input
-                value={editData.personal_info?.telephone || editData.personal_info?.phone || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, telephone: e.target.value }
-                })}
+                value={safeEditData.personal_info?.confirmEmail || ''}
+                onChange={(e) => updatePersonalInfo('confirmEmail', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Telephone/Mobile</label>
+              <Input
+                value={safeEditData.personal_info?.telephone || ''}
+                onChange={(e) => updatePersonalInfo('telephone', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Date of Birth</label>
               <Input
                 type="date"
-                value={editData.personal_info?.dateOfBirth || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, dateOfBirth: e.target.value }
-                })}
+                value={safeEditData.personal_info?.dateOfBirth || ''}
+                onChange={(e) => updatePersonalInfo('dateOfBirth', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Street Address</label>
               <Input
-                value={editData.personal_info?.streetAddress || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, streetAddress: e.target.value }
-                })}
+                value={safeEditData.personal_info?.streetAddress || ''}
+                onChange={(e) => updatePersonalInfo('streetAddress', e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Position Applied For</label>
+              <label className="text-sm font-medium text-gray-500">Street Address 2</label>
               <Input
-                value={editData.personal_info?.positionAppliedFor || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, positionAppliedFor: e.target.value }
-                })}
+                value={safeEditData.personal_info?.streetAddress2 || ''}
+                onChange={(e) => updatePersonalInfo('streetAddress2', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Town</label>
+              <Input
+                value={safeEditData.personal_info?.town || ''}
+                onChange={(e) => updatePersonalInfo('town', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Borough</label>
+              <Input
+                value={safeEditData.personal_info?.borough || ''}
+                onChange={(e) => updatePersonalInfo('borough', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Postcode</label>
               <Input
-                value={editData.personal_info?.postcode || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  personal_info: { ...editData.personal_info, postcode: e.target.value }
-                })}
+                value={safeEditData.personal_info?.postcode || ''}
+                onChange={(e) => updatePersonalInfo('postcode', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">English Proficiency</label>
+              <Select
+                value={safeEditData.personal_info?.englishProficiency || ''}
+                onValueChange={(value) => updatePersonalInfo('englishProficiency', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select proficiency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Fluent">Fluent</SelectItem>
+                  <SelectItem value="Good">Good</SelectItem>
+                  <SelectItem value="Basic">Basic</SelectItem>
+                  <SelectItem value="Limited">Limited</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Position Applied For</label>
+              <Input
+                value={safeEditData.personal_info?.positionAppliedFor || ''}
+                onChange={(e) => updatePersonalInfo('positionAppliedFor', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Willingness for Personal Care</label>
+              <Select
+                value={safeEditData.personal_info?.personalCareWillingness || ''}
+                onValueChange={(value) => updatePersonalInfo('personalCareWillingness', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select willingness" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">DBS</label>
+              <Select
+                value={safeEditData.personal_info?.hasDBS || ''}
+                onValueChange={(value) => updatePersonalInfo('hasDBS', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select DBS status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Car & Licence</label>
+              <Select
+                value={safeEditData.personal_info?.hasCarAndLicense || ''}
+                onValueChange={(value) => updatePersonalInfo('hasCarAndLicense', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select car & licence status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">NI Number</label>
+              <Input
+                value={safeEditData.personal_info?.nationalInsuranceNumber || ''}
+                onChange={(e) => updatePersonalInfo('nationalInsuranceNumber', e.target.value)}
               />
             </div>
           </div>
@@ -909,34 +1078,49 @@ function EditableApplicationContent({
           <CardTitle>Availability</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Hours Per Week</label>
-              <Input
-                value={editData.availability?.hoursPerWeek || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  availability: { ...editData.availability, hoursPerWeek: e.target.value }
-                })}
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Hours Per Week</label>
+                <Input
+                  value={safeEditData.availability?.hoursPerWeek || ''}
+                  onChange={(e) => updateAvailability('hoursPerWeek', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Right to Work (UK)</label>
+                <Select
+                  value={safeEditData.availability?.hasRightToWork || ''}
+                  onValueChange={(value) => updateAvailability('hasRightToWork', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select right to work status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
+            {/* Time Slots Editor */}
             <div>
-              <label className="text-sm font-medium text-gray-500">Right to Work</label>
-              <Select
-                value={editData.availability?.hasRightToWork || ''}
-                onValueChange={(value) => setEditData({
-                  ...editData,
-                  availability: { ...editData.availability, hasRightToWork: value }
-                })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select right to work status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium text-gray-500 mb-2 block">Time Slots</label>
+              <div className="border rounded-lg p-4 space-y-3">
+                {safeEditData.availability?.timeSlots && Object.keys(safeEditData.availability.timeSlots).length > 0 ? (
+                  Object.entries(safeEditData.availability.timeSlots).map(([slot, days]) => (
+                    <div key={slot} className="flex items-center justify-between">
+                      <span className="font-medium">{slot}:</span>
+                       <div className="flex gap-2">
+                         {Array.isArray(days) ? days.join(', ') : String(days)}
+                       </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No time slots selected</p>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -950,48 +1134,463 @@ function EditableApplicationContent({
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Name</label>
+              <label className="text-sm font-medium text-gray-500">Full Name</label>
               <Input
-                value={editData.emergency_contact?.fullName || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  emergency_contact: { ...editData.emergency_contact, fullName: e.target.value }
-                })}
+                value={safeEditData.emergency_contact?.fullName || ''}
+                onChange={(e) => updateEmergencyContact('fullName', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Relationship</label>
               <Input
-                value={editData.emergency_contact?.relationship || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  emergency_contact: { ...editData.emergency_contact, relationship: e.target.value }
-                })}
+                value={safeEditData.emergency_contact?.relationship || ''}
+                onChange={(e) => updateEmergencyContact('relationship', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Contact Number</label>
               <Input
-                value={editData.emergency_contact?.contactNumber || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  emergency_contact: { ...editData.emergency_contact, contactNumber: e.target.value }
-                })}
+                value={safeEditData.emergency_contact?.contactNumber || ''}
+                onChange={(e) => updateEmergencyContact('contactNumber', e.target.value)}
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">How Did You Hear About Us</label>
               <Input
-                value={editData.emergency_contact?.howDidYouHear || ''}
-                onChange={(e) => setEditData({
-                  ...editData,
-                  emergency_contact: { ...editData.emergency_contact, howDidYouHear: e.target.value }
-                })}
+                value={safeEditData.emergency_contact?.howDidYouHear || ''}
+                onChange={(e) => updateEmergencyContact('howDidYouHear', e.target.value)}
               />
             </div>
           </div>
         </CardContent>
       </Card>
-    </>
+
+      {/* Employment History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Employment History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Previously Employed</label>
+              <Select
+                value={safeEditData.employment_history?.previouslyEmployed || ''}
+                onValueChange={(value) => updateEmploymentHistory('previouslyEmployed', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employment status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {safeEditData.employment_history?.previouslyEmployed === 'yes' && (
+              <div className="space-y-4">
+                <h4 className="font-medium">Most Recent Employer</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Company</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.company || ''}
+                      onChange={(e) => updateRecentEmployer('company', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Name</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.name || ''}
+                      onChange={(e) => updateRecentEmployer('name', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Email</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.email || ''}
+                      onChange={(e) => updateRecentEmployer('email', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Position Held</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.position || ''}
+                      onChange={(e) => updateRecentEmployer('position', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Address</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.address || ''}
+                      onChange={(e) => updateRecentEmployer('address', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Town</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.town || ''}
+                      onChange={(e) => updateRecentEmployer('town', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Postcode</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.postcode || ''}
+                      onChange={(e) => updateRecentEmployer('postcode', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Telephone</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.telephone || ''}
+                      onChange={(e) => updateRecentEmployer('telephone', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">From</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.from || ''}
+                      onChange={(e) => updateRecentEmployer('from', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">To</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.to || ''}
+                      onChange={(e) => updateRecentEmployer('to', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Reason for Leaving</label>
+                    <Input
+                      value={safeEditData.employment_history?.recentEmployer?.reasonForLeaving || ''}
+                      onChange={(e) => updateRecentEmployer('reasonForLeaving', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* References */}
+      <Card>
+        <CardHeader>
+          <CardTitle>References</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Reference 1 */}
+            <div>
+              <h4 className="font-medium mb-3">Reference 1</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Name</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.name || ''}
+                    onChange={(e) => updateReference('reference1', 'name', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Company</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.company || ''}
+                    onChange={(e) => updateReference('reference1', 'company', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Job Title</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.jobTitle || ''}
+                    onChange={(e) => updateReference('reference1', 'jobTitle', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.email || ''}
+                    onChange={(e) => updateReference('reference1', 'email', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Number</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.contactNumber || ''}
+                    onChange={(e) => updateReference('reference1', 'contactNumber', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.address || ''}
+                    onChange={(e) => updateReference('reference1', 'address', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Town</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.town || ''}
+                    onChange={(e) => updateReference('reference1', 'town', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Postcode</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference1?.postcode || ''}
+                    onChange={(e) => updateReference('reference1', 'postcode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Reference 2 */}
+            <div>
+              <h4 className="font-medium mb-3">Reference 2</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Name</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.name || ''}
+                    onChange={(e) => updateReference('reference2', 'name', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Company</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.company || ''}
+                    onChange={(e) => updateReference('reference2', 'company', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Job Title</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.jobTitle || ''}
+                    onChange={(e) => updateReference('reference2', 'jobTitle', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.email || ''}
+                    onChange={(e) => updateReference('reference2', 'email', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Number</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.contactNumber || ''}
+                    onChange={(e) => updateReference('reference2', 'contactNumber', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.address || ''}
+                    onChange={(e) => updateReference('reference2', 'address', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Town</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.town || ''}
+                    onChange={(e) => updateReference('reference2', 'town', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Postcode</label>
+                  <Input
+                    value={safeEditData.reference_info?.reference2?.postcode || ''}
+                    onChange={(e) => updateReference('reference2', 'postcode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Skills & Experience */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Skills & Experience</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {safeEditData.skills_experience?.skills && Object.keys(safeEditData.skills_experience.skills).length > 0 ? (
+              Object.entries(safeEditData.skills_experience.skills).map(([skill, level]) => (
+                <div key={skill} className="flex items-center justify-between">
+                  <span className="font-medium">{skill}</span>
+                  <Select
+                    value={String(level)}
+                    onValueChange={(value) => updateSkillsExperience('skills', {
+                      ...safeEditData.skills_experience.skills,
+                      [skill]: value
+                    })}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Good">Good</SelectItem>
+                      <SelectItem value="Basic">Basic</SelectItem>
+                      <SelectItem value="None">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills recorded</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Declaration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Declaration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Social Service Enquiry</label>
+                <Select
+                  value={safeEditData.declarations?.socialServiceEnquiry || ''}
+                  onValueChange={(value) => updateDeclarations('socialServiceEnquiry', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Convicted of Offence</label>
+                <Select
+                  value={safeEditData.declarations?.convictedOfOffence || ''}
+                  onValueChange={(value) => updateDeclarations('convictedOfOffence', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Safeguarding Investigation</label>
+                <Select
+                  value={safeEditData.declarations?.safeguardingInvestigation || ''}
+                  onValueChange={(value) => updateDeclarations('safeguardingInvestigation', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Criminal Convictions</label>
+                <Select
+                  value={safeEditData.declarations?.criminalConvictions || ''}
+                  onValueChange={(value) => updateDeclarations('criminalConvictions', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Health Conditions</label>
+                <Select
+                  value={safeEditData.declarations?.healthConditions || ''}
+                  onValueChange={(value) => updateDeclarations('healthConditions', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Cautions / Reprimands</label>
+                <Select
+                  value={safeEditData.declarations?.cautionsReprimands || ''}
+                  onValueChange={(value) => updateDeclarations('cautionsReprimands', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Terms & Policy */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Terms & Policy</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Consent to Terms</label>
+              <Select
+                value={safeEditData.consent?.consentToTerms ? 'yes' : 'no'}
+                onValueChange={(value) => updateConsent('consentToTerms', value === 'yes')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select consent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Digital Signature (Name)</label>
+              <Input
+                value={safeEditData.consent?.signature || ''}
+                onChange={(e) => updateConsent('signature', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Date</label>
+              <Input
+                type="date"
+                value={safeEditData.consent?.date || ''}
+                onChange={(e) => updateConsent('date', e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
