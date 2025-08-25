@@ -33,6 +33,7 @@ interface WriterCtx {
   y: number
   lineHeight: number
   color: { r: number; g: number; b: number }
+  blueColor: { r: number; g: number; b: number }
 }
 
 function addPage(ctx: WriterCtx) {
@@ -46,9 +47,10 @@ function ensureSpace(ctx: WriterCtx, requiredHeight: number) {
   }
 }
 
-function drawText(ctx: WriterCtx, text: string, options?: { bold?: boolean; size?: number }) {
+function drawText(ctx: WriterCtx, text: string, options?: { bold?: boolean; size?: number; blue?: boolean }) {
   const font = options?.bold ? ctx.boldFont : ctx.font
   const size = options?.size ?? ctx.fontSize
+  const color = options?.blue ? ctx.blueColor : ctx.color
   const maxWidth = ctx.page.getWidth() - ctx.margin * 2
 
   const words = (text ?? '').split(/\s+/)
@@ -75,7 +77,7 @@ function drawText(ctx: WriterCtx, text: string, options?: { bold?: boolean; size
       y: ctx.y - ctx.lineHeight,
       size,
       font,
-      color: rgb(ctx.color.r, ctx.color.g, ctx.color.b),
+      color: rgb(color.r, color.g, color.b),
     })
     ctx.y -= ctx.lineHeight
   }
@@ -103,7 +105,39 @@ function addSectionTitle(ctx: WriterCtx, title: string) {
 
 
 function addKeyValue(ctx: WriterCtx, label: string, value?: string) {
-  drawText(ctx, `${label}: ${value ?? ''}`)
+  const maxWidth = ctx.page.getWidth() - ctx.margin * 2
+  const labelText = `${label}: `
+  const labelWidth = ctx.boldFont.widthOfTextAtSize(labelText, ctx.fontSize)
+  
+  // Draw label in black
+  ctx.page.drawText(labelText, {
+    x: ctx.margin,
+    y: ctx.y - ctx.lineHeight,
+    size: ctx.fontSize,
+    font: ctx.boldFont,
+    color: rgb(ctx.color.r, ctx.color.g, ctx.color.b),
+  })
+  
+  // Draw value in blue on the same line if it fits, otherwise wrap
+  const valueText = value ?? ''
+  const remainingWidth = maxWidth - labelWidth
+  const valueWidth = ctx.font.widthOfTextAtSize(valueText, ctx.fontSize)
+  
+  if (valueWidth <= remainingWidth) {
+    // Fits on same line
+    ctx.page.drawText(valueText, {
+      x: ctx.margin + labelWidth,
+      y: ctx.y - ctx.lineHeight,
+      size: ctx.fontSize,
+      font: ctx.font,
+      color: rgb(ctx.blueColor.r, ctx.blueColor.g, ctx.blueColor.b),
+    })
+    ctx.y -= ctx.lineHeight
+  } else {
+    // Wrap to next line
+    ctx.y -= ctx.lineHeight
+    drawText(ctx, valueText, { blue: true })
+  }
 }
 
 // Layout helpers for nicer, two-column design
@@ -137,10 +171,11 @@ function drawTextAt(
   x: number,
   yStart: number,
   width: number,
-  options?: { bold?: boolean; size?: number }
+  options?: { bold?: boolean; size?: number; blue?: boolean }
 ) {
   const font = options?.bold ? ctx.boldFont : ctx.font
   const size = options?.size ?? ctx.fontSize
+  const color = options?.blue ? ctx.blueColor : ctx.color
   const lines = wrapLines(font, size, text ?? '', width)
   let y = yStart
   for (const l of lines) {
@@ -149,7 +184,7 @@ function drawTextAt(
       y: y - ctx.lineHeight,
       size,
       font,
-      color: rgb(ctx.color.r, ctx.color.g, ctx.color.b),
+      color: rgb(color.r, color.g, color.b),
     })
     y -= ctx.lineHeight
   }
@@ -170,7 +205,7 @@ function drawKeyValueInArea(
   yStart: number,
   width: number
 ) {
-  // Label
+  // Label (black)
   ctx.page.drawText(label, {
     x,
     y: yStart - ctx.lineHeight,
@@ -178,8 +213,8 @@ function drawKeyValueInArea(
     font: ctx.boldFont,
     color: rgb(ctx.color.r, ctx.color.g, ctx.color.b),
   })
-  // Value
-  const used = drawTextAt(ctx, String(value ?? ''), x, yStart - ctx.lineHeight, width)
+  // Value (blue)
+  const used = drawTextAt(ctx, String(value ?? ''), x, yStart - ctx.lineHeight, width, { blue: true })
   return ctx.lineHeight + used
 }
 
@@ -223,9 +258,10 @@ export async function generateJobApplicationPdf(data: JobApplicationData) {
     y: page.getHeight() - 40,
     lineHeight: 16,
     color: { r: 0, g: 0, b: 0 },
+    blueColor: { r: 0.2, g: 0.4, b: 0.8 },
   }
 
-  // Header
+  // Header with logo placeholder
   drawText(ctx, 'Job Application Summary', { bold: true, size: 16 })
   addSpacer(ctx, 6)
   drawText(ctx, `Applicant: ${data.personalInfo?.fullName ?? ''}`)
@@ -344,52 +380,82 @@ export async function generateJobApplicationPdf(data: JobApplicationData) {
     }
   }
 
-  // References (dynamic)
+  // References (2-column layout)
   addSectionTitle(ctx, '5. References')
   const refs: any[] = Object.values<any>(data.references || {})
   refs
     .filter((r) => r && (r.name || r.company || r.email))
     .forEach((ref, idx) => {
-      drawText(ctx, `Reference #${idx + 1}`, { bold: true })
-      addKeyValue(ctx, 'Name', ref.name)
-      addKeyValue(ctx, 'Company', ref.company)
-      addKeyValue(ctx, 'Job Title', ref.jobTitle)
-      addKeyValue(ctx, 'Email', ref.email)
-      addKeyValue(ctx, 'Contact Number', ref.contactNumber)
-      addKeyValue(ctx, 'Address 1', ref.address)
-      addKeyValue(ctx, 'Address 2', ref.address2)
-      addKeyValue(ctx, 'Town', ref.town)
-      addKeyValue(ctx, 'Postcode', ref.postcode)
-      addSpacer(ctx, 6)
+      drawText(ctx, `Reference ${idx + 1}`, { bold: true })
+      renderTwoColGrid(ctx, [
+        ['Name', ref.name],
+        ['Company', ref.company],
+        ['Job Title', ref.jobTitle],
+        ['Email', ref.email],
+        ['Address', ref.address],
+        ['Address2', ref.address2],
+        ['Town', ref.town],
+        ['Contact Number', ref.contactNumber],
+        ['Postcode', ref.postcode],
+      ])
+      addSpacer(ctx, 12)
     })
 
-  // Skills & Experience
+  // Skills & Experience (2-column layout)
   addSectionTitle(ctx, '6. Skills & Experience')
   const skills = data.skillsExperience?.skills || {}
   const skillEntries = Object.entries(skills)
   if (skillEntries.length) {
-    skillEntries.forEach(([skill, level]) => {
-      addKeyValue(ctx, skill, String(level))
-    })
+    const skillPairs = skillEntries.map(([skill, level]) => [skill, String(level)]) as Array<[string, string]>
+    renderTwoColGrid(ctx, skillPairs)
   } else {
     drawText(ctx, 'No specific skills listed')
   }
 
   // Declaration
   addSectionTitle(ctx, '7. Declaration')
+  
+  // Declaration text
+  drawText(ctx, 'Applicant Declaration', { bold: true })
+  drawText(ctx, 'Protection of Children, Vulnerable Adults and criminal convictions.')
+  addSpacer(ctx, 4)
+  drawText(ctx, 'United Kingdom legislation and guidance relating to the welfare of children and vulnerable adults has at its core, the principle that the welfare of vulnerable persons must be the paramount consideration.')
+  addSpacer(ctx, 4)
+  drawText(ctx, 'Our care Agency fully supports this principle and therefore, we require that everyone who may come into contact with children and vulnerable persons or have access to their personal details, complete and sign this declaration.')
+  addSpacer(ctx, 4)
+  drawText(ctx, 'This record is to ensure that the children and vulnerable person\'s welfare is safeguarded. It will be kept with the strictest confidence.')
+  addSpacer(ctx, 12)
+  
   const dec = data.declaration
-  addKeyValue(ctx, 'Social Service Enquiry', dec?.socialServiceEnquiry)
+  addKeyValue(ctx, 'Has any Social Service Department or Police Service ever conducted an enquiry or investigation into any allegations or concerns that you may pose an actual or potential risk to children or vulnerable adults?', dec?.socialServiceEnquiry)
   if (dec?.socialServiceDetails) addKeyValue(ctx, 'Details', dec.socialServiceDetails)
-  addKeyValue(ctx, 'Convicted of Offence', dec?.convictedOfOffence)
+  addSpacer(ctx, 6)
+  
+  addKeyValue(ctx, 'Have you ever been convicted of any offence relating to children or vulnerable adults?', dec?.convictedOfOffence)
   if (dec?.convictedDetails) addKeyValue(ctx, 'Details', dec.convictedDetails)
-  addKeyValue(ctx, 'Safeguarding Investigation', dec?.safeguardingInvestigation)
+  addSpacer(ctx, 6)
+  
+  addKeyValue(ctx, 'Have you ever been subject to any safeguarding investigation, criminal investigation or any investigations by previous employer?', dec?.safeguardingInvestigation)
   if (dec?.safeguardingDetails) addKeyValue(ctx, 'Details', dec.safeguardingDetails)
-  addKeyValue(ctx, 'Criminal Convictions', dec?.criminalConvictions)
+  addSpacer(ctx, 6)
+  
+  addKeyValue(ctx, 'Do you have any criminal convictions spent or unspent?', dec?.criminalConvictions)
   if (dec?.criminalDetails) addKeyValue(ctx, 'Details', dec.criminalDetails)
-  addKeyValue(ctx, 'Health Conditions', dec?.healthConditions)
+  addSpacer(ctx, 6)
+  
+  addKeyValue(ctx, 'Do you have any physical or mental health conditions which may hinder your ability to carry on or work for the purpose of care activities?', dec?.healthConditions)
   if (dec?.healthDetails) addKeyValue(ctx, 'Details', dec.healthDetails)
-  addKeyValue(ctx, 'Cautions / Reprimands', dec?.cautionsReprimands)
+  addSpacer(ctx, 6)
+  
+  addKeyValue(ctx, 'Have you received cautions, reprimands or final warnings which are spent or unspent?', dec?.cautionsReprimands)
   if (dec?.cautionsDetails) addKeyValue(ctx, 'Details', dec.cautionsDetails)
+  addSpacer(ctx, 8)
+  
+  drawText(ctx, 'I declare that to the best of my knowledge the above information, and that submitted in any accompanying documents, is correct, and')
+  addSpacer(ctx, 4)
+  drawText(ctx, 'I give permission for any enquiries that need to be made to confirm such matters as qualifications. Experience and dates of employment and for the release or check or any other organisations of such information as may be necessary for that purpose.')
+  addSpacer(ctx, 4)
+  drawText(ctx, 'I confirm that the above information given by me is correct and that I consent to my personal data being held/kept and kept by the receiving client agency in accordance with the Data Protection Act 1998.')
 
   // Terms & Policy
   addSectionTitle(ctx, '8. Terms & Policy')
