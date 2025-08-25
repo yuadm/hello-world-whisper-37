@@ -10,11 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Search, Eye, FileText, Edit, Trash2, Send, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Eye, FileText, Edit, Trash2, Send, ArrowUpDown, ArrowUp, ArrowDown, Plus, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateJobApplicationPdf } from "@/lib/job-application-pdf";
 import { ReviewSummary } from "@/components/job-application/ReviewSummary";
-import { DatePickerWithRange } from "@/components/ui/date-picker";
+import { DatePickerWithRange, DatePicker } from "@/components/ui/date-picker";
 import { DateRange } from "react-day-picker";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 // Helper function to format dates from YYYY-MM-DD to MM/DD/YYYY
@@ -898,12 +898,119 @@ function EditableApplicationContent({
     });
   };
 
+  const updatePreviousEmployer = (index: number, field: string, value: any) => {
+    const currentEmployers = editData.employment_history?.previousEmployers || [];
+    const updated = currentEmployers.map((emp, i) => 
+      i === index ? { ...emp, [field]: value } : emp
+    );
+    setEditData({
+      ...editData,
+      employment_history: { 
+        ...editData.employment_history, 
+        previousEmployers: updated
+      }
+    });
+  };
+
+  const addPreviousEmployer = () => {
+    const currentEmployers = editData.employment_history?.previousEmployers || [];
+    const emptyEmployer = {
+      company: '',
+      name: '',
+      email: '',
+      position: '',
+      address: '',
+      address2: '',
+      town: '',
+      postcode: '',
+      telephone: '',
+      from: '',
+      to: '',
+      leavingDate: '',
+      keyTasks: '',
+      reasonForLeaving: '',
+    };
+    setEditData({
+      ...editData,
+      employment_history: { 
+        ...editData.employment_history, 
+        previousEmployers: [...currentEmployers, emptyEmployer]
+      }
+    });
+  };
+
+  const removePreviousEmployer = (index: number) => {
+    const currentEmployers = editData.employment_history?.previousEmployers || [];
+    setEditData({
+      ...editData,
+      employment_history: { 
+        ...editData.employment_history, 
+        previousEmployers: currentEmployers.filter((_, i) => i !== index)
+      }
+    });
+  };
+
+  const addReference = () => {
+    const currentReferences = [...(editData.reference_info?.additionalReferences || [])];
+    const emptyReference = {
+      name: '',
+      company: '',
+      jobTitle: '',
+      email: '',
+      address: '',
+      address2: '',
+      town: '',
+      contactNumber: '',
+      postcode: '',
+    };
+    setEditData({
+      ...editData,
+      reference_info: {
+        ...editData.reference_info,
+        additionalReferences: [...currentReferences, emptyReference]
+      }
+    });
+  };
+
+  const removeReference = (index: number) => {
+    const currentReferences = editData.reference_info?.additionalReferences || [];
+    setEditData({
+      ...editData,
+      reference_info: {
+        ...editData.reference_info,
+        additionalReferences: currentReferences.filter((_, i) => i !== index)
+      }
+    });
+  };
+
+  const updateAdditionalReference = (index: number, field: string, value: any) => {
+    const currentReferences = editData.reference_info?.additionalReferences || [];
+    const updated = currentReferences.map((ref, i) => 
+      i === index ? { ...ref, [field]: value } : ref
+    );
+    setEditData({
+      ...editData,
+      reference_info: {
+        ...editData.reference_info,
+        additionalReferences: updated
+      }
+    });
+  };
+
   const updateConsent = (field: string, value: any) => {
     setEditData({
       ...editData,
       consent: { ...editData.consent, [field]: value }
     });
   };
+
+  // Initialize additionalReferences if it doesn't exist
+  if (!safeEditData.reference_info?.additionalReferences) {
+    safeEditData.reference_info = {
+      ...safeEditData.reference_info,
+      additionalReferences: []
+    };
+  }
 
   return (
     <div className="space-y-6">
@@ -951,10 +1058,11 @@ function EditableApplicationContent({
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Date of Birth</label>
-              <Input
-                type="date"
-                value={safeEditData.personal_info?.dateOfBirth || ''}
-                onChange={(e) => updatePersonalInfo('dateOfBirth', e.target.value)}
+              <DatePicker
+                selected={safeEditData.personal_info?.dateOfBirth ? new Date(safeEditData.personal_info.dateOfBirth) : undefined}
+                onChange={(date) => updatePersonalInfo('dateOfBirth', date ? date.toISOString().split('T')[0] : '')}
+                placeholder="Select date of birth"
+                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
               />
             </div>
             <div>
@@ -1250,16 +1358,18 @@ function EditableApplicationContent({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">From</label>
-                    <Input
-                      value={safeEditData.employment_history?.recentEmployer?.from || ''}
-                      onChange={(e) => updateRecentEmployer('from', e.target.value)}
+                    <DatePicker
+                      selected={safeEditData.employment_history?.recentEmployer?.from ? new Date(safeEditData.employment_history.recentEmployer.from) : undefined}
+                      onChange={(date) => updateRecentEmployer('from', date ? date.toISOString().split('T')[0] : '')}
+                      placeholder="Select start date"
                     />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">To</label>
-                    <Input
-                      value={safeEditData.employment_history?.recentEmployer?.to || ''}
-                      onChange={(e) => updateRecentEmployer('to', e.target.value)}
+                    <DatePicker
+                      selected={safeEditData.employment_history?.recentEmployer?.to ? new Date(safeEditData.employment_history.recentEmployer.to) : undefined}
+                      onChange={(date) => updateRecentEmployer('to', date ? date.toISOString().split('T')[0] : '')}
+                      placeholder="Select end date"
                     />
                   </div>
                   <div>
@@ -1269,6 +1379,127 @@ function EditableApplicationContent({
                       onChange={(e) => updateRecentEmployer('reasonForLeaving', e.target.value)}
                     />
                   </div>
+                </div>
+
+                {/* Previous Employers Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Previous Employers (from most recent)</h4>
+                    <Button type="button" onClick={addPreviousEmployer} size="sm" variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Previous Employer
+                    </Button>
+                  </div>
+
+                  {safeEditData.employment_history?.previousEmployers?.map((employer, index) => (
+                    <Card key={index} className="relative">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">Previous Employer {index + 1}</CardTitle>
+                          <Button 
+                            type="button" 
+                            onClick={() => removePreviousEmployer(index)} 
+                            size="sm" 
+                            variant="outline"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Company</label>
+                            <Input
+                              value={employer.company || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'company', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Name</label>
+                            <Input
+                              value={employer.name || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'name', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Email</label>
+                            <Input
+                              value={employer.email || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'email', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Position</label>
+                            <Input
+                              value={employer.position || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'position', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Address</label>
+                            <Input
+                              value={employer.address || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'address', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Town</label>
+                            <Input
+                              value={employer.town || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'town', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Postcode</label>
+                            <Input
+                              value={employer.postcode || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'postcode', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Telephone</label>
+                            <Input
+                              value={employer.telephone || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'telephone', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">From</label>
+                            <DatePicker
+                              selected={employer.from ? new Date(employer.from) : undefined}
+                              onChange={(date) => updatePreviousEmployer(index, 'from', date ? date.toISOString().split('T')[0] : '')}
+                              placeholder="Select start date"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">To</label>
+                            <DatePicker
+                              selected={employer.to ? new Date(employer.to) : undefined}
+                              onChange={(date) => updatePreviousEmployer(index, 'to', date ? date.toISOString().split('T')[0] : '')}
+                              placeholder="Select end date"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="text-sm font-medium text-gray-500">Key Tasks</label>
+                            <Textarea
+                              value={employer.keyTasks || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'keyTasks', e.target.value)}
+                              rows={2}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="text-sm font-medium text-gray-500">Reason for Leaving</label>
+                            <Textarea
+                              value={employer.reasonForLeaving || ''}
+                              onChange={(e) => updatePreviousEmployer(index, 'reasonForLeaving', e.target.value)}
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             )}
@@ -1408,6 +1639,95 @@ function EditableApplicationContent({
                 </div>
               </div>
             </div>
+
+            {/* Additional References */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Additional References</h4>
+                <Button type="button" onClick={addReference} size="sm" variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Reference
+                </Button>
+              </div>
+
+              {safeEditData.reference_info?.additionalReferences?.map((reference, index) => (
+                <Card key={index} className="relative">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Additional Reference {index + 1}</CardTitle>
+                      <Button 
+                        type="button" 
+                        onClick={() => removeReference(index)} 
+                        size="sm" 
+                        variant="outline"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Name</label>
+                        <Input
+                          value={reference.name || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Company</label>
+                        <Input
+                          value={reference.company || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'company', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Job Title</label>
+                        <Input
+                          value={reference.jobTitle || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'jobTitle', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Email</label>
+                        <Input
+                          value={reference.email || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'email', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Contact Number</label>
+                        <Input
+                          value={reference.contactNumber || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'contactNumber', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Address</label>
+                        <Input
+                          value={reference.address || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'address', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Town</label>
+                        <Input
+                          value={reference.town || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'town', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Postcode</label>
+                        <Input
+                          value={reference.postcode || ''}
+                          onChange={(e) => updateAdditionalReference(index, 'postcode', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1470,6 +1790,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.socialServiceEnquiry === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.socialServiceDetails || ''}
+                      onChange={(e) => updateDeclarations('socialServiceDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Convicted of Offence</label>
@@ -1485,6 +1818,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.convictedOfOffence === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.convictedDetails || ''}
+                      onChange={(e) => updateDeclarations('convictedDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Safeguarding Investigation</label>
@@ -1500,6 +1846,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.safeguardingInvestigation === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.safeguardingDetails || ''}
+                      onChange={(e) => updateDeclarations('safeguardingDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Criminal Convictions</label>
@@ -1515,6 +1874,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.criminalConvictions === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.criminalDetails || ''}
+                      onChange={(e) => updateDeclarations('criminalDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Health Conditions</label>
@@ -1530,6 +1902,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.healthConditions === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.healthDetails || ''}
+                      onChange={(e) => updateDeclarations('healthDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Cautions / Reprimands</label>
@@ -1545,6 +1930,19 @@ function EditableApplicationContent({
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
+                {safeEditData.declarations?.cautionsReprimands === 'yes' && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium text-gray-500">Please provide details *</label>
+                    <Textarea
+                      value={safeEditData.declarations?.cautionsDetails || ''}
+                      onChange={(e) => updateDeclarations('cautionsDetails', e.target.value)}
+                      placeholder="Please provide full details..."
+                      rows={3}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
