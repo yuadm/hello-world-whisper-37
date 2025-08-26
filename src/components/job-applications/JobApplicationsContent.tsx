@@ -793,20 +793,6 @@ try {
     </div>
   );
 };
-              >
-                <Send className="w-4 h-4" />
-                Email Previous Employer
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Send reference request emails to employers
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
 
 // Separate component for editing to keep the existing detailed form layout
 function EditableApplicationContent({ 
