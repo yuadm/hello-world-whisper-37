@@ -33,6 +33,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const requestBody = await req.json();
+    console.log("Starting send-reference-email function with data:", requestBody);
+
     const { 
       applicationId,
       applicantName,
@@ -47,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
       companyName,
       referenceType,
       employmentDetails
-    }: ReferenceEmailRequest = await req.json();
+    }: ReferenceEmailRequest = requestBody;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -132,28 +135,25 @@ const handler = async (req: Request): Promise<Response> => {
 
 
     const apiKey = Deno.env.get("BREVO_API_KEY");
+    console.log("BREVO_API_KEY exists:", !!apiKey);
     if (!apiKey) {
+      console.error("BREVO_API_KEY environment variable is not set");
       throw new Error("BREVO_API_KEY environment variable is not set");
     }
 
-    // Store reference request in database (align with actual table schema)
+    // Store reference request in database
     const { data: requestData, error: dbError } = await supabase
       .from('reference_requests')
       .insert({
         application_id: applicationId,
-        applicant_name: applicantName || 'Unknown Applicant',
-        applicant_address: applicantAddress || '',
-        applicant_postcode: applicantPostcode || '',
-        position_applied_for: roleTitle || null,
         reference_email: referenceEmail,
-        reference_name: referenceName || referenceEmail,
-        reference_company: referenceCompany || employmentDetails?.company || null,
-        reference_address: referenceAddress || null,
-        company_name: safeCompanyName || null,
+        reference_name: referenceName,
         reference_type: referenceType,
         token: referenceToken,
         reference_data: {
-          employmentDetails: employmentDetails || null
+          company: referenceCompany,
+          address: referenceAddress,
+          employmentDetails: employmentDetails
         }
       })
       .select()
