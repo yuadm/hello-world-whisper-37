@@ -215,3 +215,166 @@ export const generateReferencePDF = (
 
   return pdf;
 };
+
+export interface ManualReferenceInput {
+  applicantName: string;
+  applicantPosition?: string;
+  referenceType: 'employer' | 'character';
+  referee: {
+    name?: string;
+    company?: string;
+    jobTitle?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    town?: string;
+    postcode?: string;
+  };
+}
+
+export const generateManualReferencePDF = (data: ManualReferenceInput) => {
+  const pdf = new jsPDF();
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  const lineHeight = 7;
+  let y = 30;
+
+  const addWrappedText = (text: string, size = 11) => {
+    pdf.setFontSize(size);
+    const lines = pdf.splitTextToSize(text, contentWidth);
+    pdf.text(lines, margin, y);
+    y += lines.length * lineHeight;
+  };
+
+  const addTitle = (text: string) => {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.text(text, pageWidth / 2, y, { align: 'center' });
+    y += 14;
+    pdf.setFont('helvetica', 'normal');
+  };
+
+  const addSection = (title: string) => {
+    y += 6;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+    pdf.text(title, margin, y);
+    y += 6;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+  };
+
+  const addLabeledLine = (label: string, value?: string) => {
+    const labelText = `${label}`;
+    pdf.text(labelText, margin, y);
+    const startX = margin + pdf.getTextWidth(labelText) + 4;
+    const endX = pageWidth - margin;
+    // Pre-fill value if provided
+    if (value) {
+      pdf.text(value, startX + 1, y);
+    }
+    // Draw underline
+    pdf.line(startX, y + 1.5, endX, y + 1.5);
+    y += lineHeight;
+  };
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageHeight - 20) {
+      pdf.addPage();
+      y = 30;
+    }
+  };
+
+  // Header
+  addTitle('Reference Form');
+  pdf.setFontSize(12);
+  pdf.text(`${data.referenceType === 'employer' ? 'Employer' : 'Character'} reference for ${data.applicantName}`, margin, y);
+  y += 8;
+  if (data.applicantPosition) {
+    pdf.text(`Position Applied For: ${data.applicantPosition}`, margin, y);
+    y += 8;
+  }
+  pdf.text(`Date: ____________________`, margin, y);
+  y += 10;
+
+  // Referee details
+  addSection('Referee Information');
+  addLabeledLine('Full Name:', data.referee.name);
+  addLabeledLine('Job Title:', data.referee.jobTitle);
+  addLabeledLine('Company/Organization:', data.referee.company);
+  addLabeledLine('Email:', data.referee.email);
+  addLabeledLine('Phone:', data.referee.phone);
+  addLabeledLine('Address:', data.referee.address);
+  addLabeledLine('Town/City:', data.referee.town);
+  addLabeledLine('Postcode:', data.referee.postcode);
+
+  // Relationship
+  addSection('Relationship');
+  addLabeledLine(`How long have you known ${data.applicantName}?`);
+
+  // Questions
+  if (data.referenceType === 'employer') {
+    addSection('Employment Details');
+    addLabeledLine('Employment Dates:');
+    addWrappedText('Key Responsibilities:');
+    ensureSpace(40);
+    // Multi-line area
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 12;
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 12;
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 14;
+
+    addSection('Ratings');
+    addLabeledLine('Job Performance (Excellent/Good/Satisfactory/Below Average):');
+    addLabeledLine('Attendance (Excellent/Good/Fair/Poor):');
+
+    addSection('Other');
+    addWrappedText('Reason for Leaving:');
+    ensureSpace(26);
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 12;
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 14;
+
+    addLabeledLine('Would you rehire this person? (Yes without reservation / Yes with reservations / No):');
+  } else {
+    addSection('Character Assessment');
+    addWrappedText('Personal Qualities:');
+    ensureSpace(40);
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 12;
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 12;
+    pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+    y += 14;
+
+    addLabeledLine('Reliability (Excellent/Good/Fair/Poor):');
+    addLabeledLine('Integrity (Excellent/Good/Fair/Poor):');
+    addLabeledLine('Communication (Excellent/Good/Fair/Poor):');
+  }
+
+  addSection('Final Recommendation');
+  addWrappedText('Overall Recommendation:');
+  ensureSpace(26);
+  pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+  y += 12;
+  pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+  y += 14;
+
+  addWrappedText('Additional Comments:');
+  ensureSpace(26);
+  pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+  y += 12;
+  pdf.line(margin, y + 2, pageWidth - margin, y + 2);
+  y += 14;
+
+  addSection('Signature');
+  addLabeledLine('Referee Signature:');
+  addLabeledLine('Date:');
+
+  return pdf;
+};

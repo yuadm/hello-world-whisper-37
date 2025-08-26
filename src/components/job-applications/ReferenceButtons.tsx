@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Send, Download, Loader2, CheckCircle2 } from 'lucide-react';
-import { generateReferencePDF } from '@/lib/reference-pdf';
+import { generateReferencePDF, generateManualReferencePDF } from '@/lib/reference-pdf';
 
 interface ReferenceButtonsProps {
   application: any;
@@ -118,13 +118,43 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
   };
 
   const generateBlankPDF = (referenceKey: string, reference: any) => {
-    // For now, just show a message about manual PDF generation
-    toast({
-      title: "Manual Reference PDF",
-      description: "PDF generation will be implemented. For now, please manually create the reference document.",
-    });
-  };
+    try {
+      const personalInfo = application.personal_info || {};
+      const applicantName = personalInfo.fullName || 'Unknown Applicant';
+      const refType = determineReferenceType(application);
 
+      const pdf = generateManualReferencePDF({
+        applicantName,
+        applicantPosition: personalInfo.positionAppliedFor,
+        referenceType: refType,
+        referee: {
+          name: reference.name,
+          company: reference.company,
+          jobTitle: reference.jobTitle,
+          email: reference.email,
+          phone: reference.contactNumber,
+          address: reference.address,
+          town: reference.town,
+          postcode: reference.postcode,
+        },
+      });
+
+      const fileName = `manual-reference-${reference.name?.replace(/\s+/g, '-') || referenceKey}-${applicantName.replace(/\s+/g, '-')}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: 'Manual PDF Generated',
+        description: `Blank reference form for ${reference.name || referenceKey} downloaded`,
+      });
+    } catch (error) {
+      console.error('Error generating manual reference PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate manual reference PDF',
+        variant: 'destructive',
+      });
+    }
+  };
   if (!references) return null;
 
   if (loading) {
@@ -167,14 +197,24 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
             </div>
             <div className="flex gap-2">
               {completedRef ? (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => downloadCompletedReference(completedRef)}
-                >
-                  <Download className="w-4 h-4 mr-1" />
-                  Download PDF
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => downloadCompletedReference(completedRef)}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generateBlankPDF('reference1', references.reference1)}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Manual PDF
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button
@@ -234,14 +274,24 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
             </div>
             <div className="flex gap-2">
               {completedRef ? (
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => downloadCompletedReference(completedRef)}
-                >
-                  <Download className="w-4 h-4 mr-1" />
-                  Download PDF
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => downloadCompletedReference(completedRef)}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generateBlankPDF('reference2', references.reference2)}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Manual PDF
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button
