@@ -44,18 +44,39 @@ interface CompletedReference {
   application_id: string;
 }
 
+interface CompanySettings {
+  name: string;
+  logo?: string;
+}
+
 export const generateReferencePDF = (
   reference: CompletedReference,
   applicantName: string,
   applicantDOB: string,
   applicantPostcode: string,
-  companyName: string = 'Company Name'
+  companySettings: CompanySettings = { name: 'Company Name' }
 ) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 20;
   const lineHeight = 7;
   let yPosition = 30;
+
+  // Add company logo if available
+  if (companySettings.logo) {
+    try {
+      pdf.addImage(companySettings.logo, 'JPEG', margin, yPosition - 5, 40, 20);
+      yPosition += 25;
+    } catch (error) {
+      console.error('Error adding logo to PDF:', error);
+    }
+  }
+
+  // Add company name
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(companySettings.name, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 15;
 
   // Helper function to add text with word wrap
   const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 11): number => {
@@ -264,7 +285,10 @@ export interface ManualReferenceInput {
   };
 }
 
-export const generateManualReferencePDF = (data: ManualReferenceInput) => {
+export const generateManualReferencePDF = (
+  data: ManualReferenceInput,
+  companySettings: CompanySettings = { name: 'Company Name' }
+) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -272,6 +296,22 @@ export const generateManualReferencePDF = (data: ManualReferenceInput) => {
   const contentWidth = pageWidth - margin * 2;
   const lineHeight = 7;
   let y = 30;
+
+  // Add company logo if available
+  if (companySettings.logo) {
+    try {
+      pdf.addImage(companySettings.logo, 'JPEG', margin, y - 5, 40, 20);
+      y += 25;
+    } catch (error) {
+      console.error('Error adding logo to PDF:', error);
+    }
+  }
+
+  // Add company name
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(14);
+  pdf.text(companySettings.name, pageWidth / 2, y, { align: 'center' });
+  y += 15;
 
   const addWrappedText = (text: string, size = 11) => {
     pdf.setFontSize(size);

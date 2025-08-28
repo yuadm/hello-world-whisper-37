@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Send, Download, Loader2, CheckCircle2 } from 'lucide-react';
 import { generateReferencePDF, generateManualReferencePDF } from '@/lib/reference-pdf';
 
@@ -14,6 +15,7 @@ interface ReferenceButtonsProps {
 
 export function ReferenceButtons({ application, references, onUpdate }: ReferenceButtonsProps) {
   const { toast } = useToast();
+  const { companySettings } = useCompany();
   const [sending, setSending] = useState<string | null>(null);
   const [completedReferences, setCompletedReferences] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,13 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       const applicantName = application.personal_info?.fullName || 'Unknown Applicant';
       const applicantDOB = application.personal_info?.dateOfBirth || 'Not provided';
       const applicantPostcode = application.personal_info?.postcode || 'Not provided';
-      const pdf = generateReferencePDF(completedRef, applicantName, applicantDOB, applicantPostcode);
+      const pdf = generateReferencePDF(
+        completedRef, 
+        applicantName, 
+        applicantDOB, 
+        applicantPostcode, 
+        { name: companySettings.name, logo: companySettings.logo }
+      );
       
       const fileName = `reference-${completedRef.reference_name.replace(/\s+/g, '-')}-${applicantName.replace(/\s+/g, '-')}.pdf`;
       pdf.save(fileName);
@@ -169,7 +177,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
           town: reference.town,
           postcode: reference.postcode,
         },
-      });
+      }, { name: companySettings.name, logo: companySettings.logo });
 
       const fileName = `manual-reference-${reference.name?.replace(/\s+/g, '-') || referenceKey}-${applicantName.replace(/\s+/g, '-')}.pdf`;
       pdf.save(fileName);
