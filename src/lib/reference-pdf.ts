@@ -65,7 +65,9 @@ export const generateReferencePDF = (
   // Add company logo if available
   if (companySettings.logo) {
     try {
-      pdf.addImage(companySettings.logo, 'JPEG', margin, yPosition - 5, 40, 20);
+      const logoWidth = 40;
+      const logoX = (pageWidth / 2) - (logoWidth / 2);
+      pdf.addImage(companySettings.logo, 'JPEG', logoX, yPosition - 5, logoWidth, 20);
       yPosition += 25;
     } catch (error) {
       console.error('Error adding logo to PDF:', error);
@@ -300,7 +302,9 @@ export const generateManualReferencePDF = (
   // Add company logo if available
   if (companySettings.logo) {
     try {
-      pdf.addImage(companySettings.logo, 'JPEG', margin, y - 5, 40, 20);
+      const logoWidth = 40;
+      const logoX = (pageWidth / 2) - (logoWidth / 2);
+      pdf.addImage(companySettings.logo, 'JPEG', logoX, y - 5, logoWidth, 20);
       y += 25;
     } catch (error) {
       console.error('Error adding logo to PDF:', error);
