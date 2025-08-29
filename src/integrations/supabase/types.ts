@@ -423,6 +423,196 @@ export type Database = {
         }
         Relationships: []
       }
+      client_compliance_period_records: {
+        Row: {
+          auto_generated: boolean | null
+          client_compliance_type_id: string
+          client_id: string
+          completed_by: string | null
+          completion_date: string
+          completion_method: string | null
+          created_at: string
+          grace_period_end: string | null
+          id: string
+          is_overdue: boolean | null
+          last_notification_sent: string | null
+          next_due_date: string | null
+          notes: string | null
+          period_identifier: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auto_generated?: boolean | null
+          client_compliance_type_id: string
+          client_id: string
+          completed_by?: string | null
+          completion_date?: string
+          completion_method?: string | null
+          created_at?: string
+          grace_period_end?: string | null
+          id?: string
+          is_overdue?: boolean | null
+          last_notification_sent?: string | null
+          next_due_date?: string | null
+          notes?: string | null
+          period_identifier: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_generated?: boolean | null
+          client_compliance_type_id?: string
+          client_id?: string
+          completed_by?: string | null
+          completion_date?: string
+          completion_method?: string | null
+          created_at?: string
+          grace_period_end?: string | null
+          id?: string
+          is_overdue?: boolean | null
+          last_notification_sent?: string | null
+          next_due_date?: string | null
+          notes?: string | null
+          period_identifier?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_compliance_period_records_client_compliance_type_id_fkey"
+            columns: ["client_compliance_type_id"]
+            isOneToOne: false
+            referencedRelation: "client_compliance_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_compliance_period_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_compliance_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          frequency: string
+          has_questionnaire: boolean | null
+          id: string
+          name: string
+          questionnaire_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          has_questionnaire?: boolean | null
+          id?: string
+          name: string
+          questionnaire_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          has_questionnaire?: boolean | null
+          id?: string
+          name?: string
+          questionnaire_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_spot_check_records: {
+        Row: {
+          care_workers: string
+          client_id: string
+          compliance_record_id: string | null
+          created_at: string
+          date: string
+          id: string
+          observations: Json
+          performed_by: string
+          service_user_name: string
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          care_workers: string
+          client_id: string
+          compliance_record_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          observations?: Json
+          performed_by: string
+          service_user_name: string
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          care_workers?: string
+          client_id?: string
+          compliance_record_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          observations?: Json
+          performed_by?: string
+          service_user_name?: string
+          time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_spot_check_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string | null

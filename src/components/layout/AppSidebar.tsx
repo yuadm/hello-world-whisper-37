@@ -52,6 +52,13 @@ const navigationItems = [
     requiredPage: "/employees"
   },
   {
+    title: "Clients",
+    url: "/clients",
+    icon: Building2,
+    description: "Manage Clients",
+    requiredPage: "/clients"
+  },
+  {
     title: "Leaves",
     url: "/leaves",
     icon: Calendar,

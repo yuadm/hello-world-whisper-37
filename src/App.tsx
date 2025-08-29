@@ -13,6 +13,7 @@ import { EmployeeProtectedRoute } from "@/components/layout/EmployeeProtectedRou
 import PublicHome from "./pages/PublicHome";
 import Index from "./pages/Index";
 import Employees from "./pages/Employees";
+import Clients from "./pages/Clients";
 import Leaves from "./pages/Leaves";
 import Documents from "./pages/Documents";
 import Compliance from "./pages/Compliance";
@@ -87,6 +88,11 @@ function AppContent() {
       <Route path="/employees" element={
         <ProtectedRoute requiredPage="/employees">
           <Employees />
+        </ProtectedRoute>
+      } />
+      <Route path="/clients" element={
+        <ProtectedRoute requiredPage="/clients">
+          <Clients />
         </ProtectedRoute>
       } />
       <Route path="/leaves" element={

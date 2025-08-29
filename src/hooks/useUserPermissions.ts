@@ -109,6 +109,7 @@ export function useUserPermissions() {
     const pathModuleMap: Record<string, string> = {
       '/': 'dashboard',
       '/employees': 'employees',
+      '/clients': 'clients',
       '/leaves': 'leaves',
       '/documents': 'documents',
       '/document-signing': 'document-signing',
