@@ -163,10 +163,18 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       const applicantName = personalInfo.fullName || 'Unknown Applicant';
       const refType = referenceTypeForKey(application, referenceKey as 'reference1' | 'reference2');
 
+      const employmentHistory = application.employment_history || {};
+      const recentEmployer = employmentHistory.recentEmployer || {};
+      
       const pdf = generateManualReferencePDF({
         applicantName,
         applicantPosition: personalInfo.positionAppliedFor,
         referenceType: refType,
+        applicantDOB: personalInfo.dateOfBirth,
+        applicantPostcode: personalInfo.postcode,
+        employmentFrom: recentEmployer.from,
+        employmentTo: recentEmployer.to,
+        reasonForLeaving: recentEmployer.reasonForLeaving,
         referee: {
           name: reference.name,
           company: reference.company,

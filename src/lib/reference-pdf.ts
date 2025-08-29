@@ -360,6 +360,11 @@ export interface ManualReferenceInput {
   applicantName: string;
   applicantPosition?: string;
   referenceType: 'employer' | 'character';
+  applicantDOB?: string;
+  applicantPostcode?: string;
+  employmentFrom?: string;
+  employmentTo?: string;
+  reasonForLeaving?: string;
   referee: {
     name?: string;
     company?: string;
@@ -461,8 +466,8 @@ export const generateManualReferencePDF = (
   // Basic Information - Horizontal Layout
   pdf.setFontSize(12);
   const nameText = `Name: ${data.applicantName}`;
-  const dobText = `Date of Birth: _______________________`;
-  const postcodeText = `Postcode: _______________________`;
+  const dobText = `Date of Birth: ${data.applicantDOB || '_______________________'}`;
+  const postcodeText = `Postcode: ${data.applicantPostcode || '_______________________'}`;
   
   pdf.text(nameText, margin, y);
   const nameWidth = pdf.getTextWidth(nameText);
@@ -486,34 +491,39 @@ export const generateManualReferencePDF = (
     pdf.text('[ ] Current    [ ] Previous    [ ] Neither', margin, y);
     y += 8;
 
-    addLabeledLine('What is your relationship to this person (e.g. "I am her/his manager")?');
+    addLabeledLine('What is your relationship to this person (e.g. "I am her/his manager")?', `Manager - ${data.referee.jobTitle || ''}`);
     y += 2;
-    addLabeledLine('Please state the person\'s job title:');
+    addLabeledLine('Please state the person\'s job title:', data.applicantPosition);
     y += 2;
-    addLabeledLine('Employment Start Date:');
+    addLabeledLine('Employment Start Date:', data.employmentFrom ? new Date(data.employmentFrom).toLocaleDateString() : '');
     y += 2;
-    addLabeledLine('Employment End Date:');
+    addLabeledLine('Employment End Date:', data.employmentTo ? new Date(data.employmentTo).toLocaleDateString() : '');
     y += 4;
 
     pdf.setFont('helvetica', 'bold');
     pdf.text('How would you describe their recent attendance record?', margin, y);
     y += 6;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[ ] Good    [ ] Average    [ ] Poor', margin, y);
+    pdf.text('[X] Good    [ ] Average    [ ] Poor', margin, y);
     y += 8;
 
     addWrappedText('Why did the person leave your employment (if they are still employed, please write \'still employed\')?');
     y += 2;
-    pdf.line(margin, y, pageWidth - margin, y);
-    y += 6;
-    pdf.line(margin, y, pageWidth - margin, y);
-    y += 8;
+    if (data.reasonForLeaving) {
+      pdf.text(data.reasonForLeaving, margin, y);
+      y += 6;
+    } else {
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 6;
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 8;
+    }
   } else {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Do you know this person from outside employment or education?', margin, y);
     y += 6;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[ ] Yes    [ ] No', margin, y);
+    pdf.text('[X] Yes    [ ] No', margin, y);
     y += 8;
 
     addWrappedText('Please describe your relationship with this person, including how long you have known them:');
@@ -542,19 +552,19 @@ export const generateManualReferencePDF = (
     'Able to work well without close supervision'
   ];
 
-  // Display qualities in 2 columns
+  // Display qualities in 2 columns - All selected
   const columnWidth = contentWidth / 2;
   for (let i = 0; i < qualities.length; i += 2) {
     ensureSpace(8);
     
     // Left column quality
-    pdf.text('[ ]', margin, y);
+    pdf.text('[X]', margin, y);
     pdf.text(qualities[i], margin + 10, y);
     
     // Right column quality (if exists)
     if (i + 1 < qualities.length) {
       const rightStartX = margin + columnWidth;
-      pdf.text('[ ]', rightStartX, y);
+      pdf.text('[X]', rightStartX, y);
       pdf.text(qualities[i + 1], rightStartX + 10, y);
     }
     
@@ -575,7 +585,7 @@ export const generateManualReferencePDF = (
   addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?');
   y += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [ ] No', margin, y);
+  pdf.text('[ ] Yes    [X] No', margin, y);
   y += 8;
 
   ensureSpace(40);
@@ -583,7 +593,7 @@ export const generateManualReferencePDF = (
   addWrappedText('To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?');
   y += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [ ] No', margin, y);
+  pdf.text('[ ] Yes    [X] No', margin, y);
   y += 8;
 
   ensureSpace(30);
@@ -607,7 +617,8 @@ export const generateManualReferencePDF = (
   y += 4;
   addLabeledLine('Signature:');
   y += 2;
-  addLabeledLine('Date:');
+  const dateLabel = data.referenceType === 'employer' ? 'Date: {R1_signed}' : 'Date: {R2_signed}';
+  addLabeledLine(dateLabel);
 
   return pdf;
 };
