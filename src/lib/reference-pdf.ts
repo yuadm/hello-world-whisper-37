@@ -190,7 +190,9 @@ export const generateReferencePDF = (
     pdf.text('Do you know this person from outside employment or education?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[ ] Yes    [ ] No', margin, yPosition);
+    const outsideYesBox = reference.form_data.employmentStatus === 'yes' ? '[X]' : '[ ]';
+    const outsideNoBox = reference.form_data.employmentStatus === 'no' ? '[X]' : '[ ]';
+    pdf.text(`${outsideYesBox} Yes    ${outsideNoBox} No`, margin, yPosition);
     yPosition += lineHeight + 5;
 
     pdf.setFont('helvetica', 'bold');
@@ -237,12 +239,13 @@ export const generateReferencePDF = (
 
   // Criminal background questions
   pdf.setFont('helvetica', 'bold');
-  yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not protected as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin, 11);
+  yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
   const convictionsYesBox = reference.form_data.convictionsKnown === 'yes' ? '[X]' : '[ ]';
   const convictionsNoBox = reference.form_data.convictionsKnown === 'no' ? '[X]' : '[ ]';
-  pdf.text(`${convictionsYesBox} Yes    ${convictionsNoBox} No`, margin, yPosition);
+  const convictionsAnswer = reference.form_data.convictionsKnown ? `${convictionsYesBox} Yes    ${convictionsNoBox} No` : 'Not answered';
+  pdf.text(convictionsAnswer, margin, yPosition);
   yPosition += lineHeight + 5;
 
   pdf.setFont('helvetica', 'bold');
@@ -251,20 +254,23 @@ export const generateReferencePDF = (
   pdf.setFont('helvetica', 'normal');
   const proceedingsYesBox = reference.form_data.criminalProceedingsKnown === 'yes' ? '[X]' : '[ ]';
   const proceedingsNoBox = reference.form_data.criminalProceedingsKnown === 'no' ? '[X]' : '[ ]';
-  pdf.text(`${proceedingsYesBox} Yes    ${proceedingsNoBox} No`, margin, yPosition);
+  const proceedingsAnswer = reference.form_data.criminalProceedingsKnown ? `${proceedingsYesBox} Yes    ${proceedingsNoBox} No` : 'Not answered';
+  pdf.text(proceedingsAnswer, margin, yPosition);
   yPosition += lineHeight + 5;
 
   // Criminal details if provided
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('If you answered "yes" to either of the two previous questions, please provide details:', margin, yPosition);
-  yPosition += lineHeight;
-  pdf.setFont('helvetica', 'normal');
-  yPosition = addWrappedText(`${reference.form_data.criminalDetails || 'Not provided'}`, margin, yPosition, pageWidth - 2 * margin);
-  yPosition += 10;
+  if (reference.form_data.convictionsKnown === 'yes' || reference.form_data.criminalProceedingsKnown === 'yes' || reference.form_data.criminalDetails) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('If you answered "yes" to either of the two previous questions, please provide details:', margin, yPosition);
+    yPosition += lineHeight;
+    pdf.setFont('helvetica', 'normal');
+    yPosition = addWrappedText(`${reference.form_data.criminalDetails || 'Not provided'}`, margin, yPosition, pageWidth - 2 * margin);
+    yPosition += 10;
+  }
 
   // Additional Comments
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Please tell us anything else about this person that you think we should know:', margin, yPosition);
+  pdf.text('Any additional comments you would like to make about this person:', margin, yPosition);
   yPosition += lineHeight;
   pdf.setFont('helvetica', 'normal');
   yPosition = addWrappedText(`${reference.form_data.additionalComments || 'Not provided'}`, margin, yPosition, pageWidth - 2 * margin);
@@ -288,6 +294,10 @@ export const generateReferencePDF = (
   pdf.text('Declaration:', margin, yPosition);
   yPosition += lineHeight;
   pdf.setFont('helvetica', 'normal');
+  const declarationText = 'I certify that, to the best of my knowledge, the information I have given is true and complete. I understand that any deliberate omission, falsification or misrepresentation may lead to refusal of appointment or dismissal.';
+  yPosition = addWrappedText(declarationText, margin, yPosition, pageWidth - 2 * margin);
+  yPosition += 8;
+  
   pdf.text('Date of completion:', margin, yPosition);
   pdf.text(reference.form_data.signatureDate || new Date(reference.completed_at).toLocaleDateString(), margin + 100, yPosition);
 
