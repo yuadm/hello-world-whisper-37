@@ -308,8 +308,8 @@ export function ClientsContent() {
         </CardContent>
       </Card>
 
-      {/* Clients Table */}
-      <Card>
+      {/* Clients Table - Desktop */}
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>Clients ({filteredClients.length})</CardTitle>
         </CardHeader>
@@ -367,6 +367,51 @@ export function ClientsContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Clients Cards - Mobile */}
+      <div className="md:hidden space-y-4">
+        {filteredClients.map((client) => (
+          <Card key={client.id} className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-medium text-foreground">{client.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {client.branches?.name || getBranchName(client.branch_id)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Created: {new Date(client.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openViewDialog(client)}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedClient(client);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+        {filteredClients.length === 0 && (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">No clients found</p>
+          </Card>
+        )}
+      </div>
 
       {/* Add Client Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
