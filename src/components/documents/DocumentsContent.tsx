@@ -1162,7 +1162,7 @@ export function DocumentsContent() {
 
       {/* Add Document Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Document</DialogTitle>
             <DialogDescription>
@@ -1170,7 +1170,7 @@ export function DocumentsContent() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="employee">Employee</Label>
                 <Select
@@ -1219,7 +1219,7 @@ export function DocumentsContent() {
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Issue Date</Label>
                 <DateTextPicker
@@ -1238,7 +1238,7 @@ export function DocumentsContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
                 <Select
@@ -1282,7 +1282,7 @@ export function DocumentsContent() {
             <div className="space-y-3 p-4 border rounded-lg bg-gradient-subtle border-primary/20">
               <h4 className="text-sm font-semibold text-foreground">Employee Status</h4>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="sponsored"
