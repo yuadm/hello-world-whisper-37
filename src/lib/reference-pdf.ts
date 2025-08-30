@@ -532,7 +532,7 @@ export const generateManualReferencePDF = (
     pdf.text('Do you know this person from outside employment or education?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[ ] Yes    [ ] No', margin, yPosition);
+    pdf.text('[X] Yes    [ ] No', margin, yPosition);
     yPosition += lineHeight + 5;
 
     pdf.setFont('helvetica', 'bold');
@@ -602,7 +602,7 @@ export const generateManualReferencePDF = (
   yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [ ] No', margin, yPosition);
+  pdf.text('[ ] Yes    [X] No', margin, yPosition);
   yPosition += lineHeight + 8;
 
   ensureSpace(50);
@@ -610,7 +610,7 @@ export const generateManualReferencePDF = (
   yPosition = addWrappedText('To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [ ] No', margin, yPosition);
+  pdf.text('[ ] Yes    [X] No', margin, yPosition);
   yPosition += lineHeight + 8;
 
   // Additional Comments
