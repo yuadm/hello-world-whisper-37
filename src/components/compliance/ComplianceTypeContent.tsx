@@ -949,18 +949,6 @@ const handleStatusCardClick = (status: 'compliant' | 'overdue' | 'due' | 'pendin
                   </p>
                 )}
               </div>
-              <AddComplianceRecordModal
-                complianceTypeId={complianceType?.id || ''}
-                complianceTypeName={complianceType?.name || ''}
-                frequency={complianceType?.frequency || ''}
-                periodIdentifier={getCurrentPeriodIdentifier(complianceType?.frequency || '')}
-                onRecordAdded={fetchData}
-                trigger={
-                  <Button>
-                    Add Compliance Record
-                  </Button>
-                }
-              />
             </div>
             
             {getFilteredEmployeeList().length === 0 ? (
