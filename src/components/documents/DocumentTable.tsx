@@ -434,7 +434,7 @@ export function DocumentTable({ documents, employees, documentTypes, selectedDoc
                           <Eye className="h-4 w-4" />
                         </Button>
                       )}
-                      {onEdit && (
+                      {/* {onEdit && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -443,7 +443,7 @@ export function DocumentTable({ documents, employees, documentTypes, selectedDoc
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                      )}
+                      )} */}
                       {onDelete && (
                         <Button
                           variant="ghost"
