@@ -376,7 +376,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
       <DialogTrigger asChild>
         {trigger || defaultTrigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Compliance Record</DialogTitle>
           <DialogDescription>
