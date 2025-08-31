@@ -366,23 +366,13 @@ export function DocumentViewDialog({ document, open, onClose }: DocumentViewDial
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground">Issue Date</label>
-                            <DateTextPicker
-                              value={editValues.issue_date}
-                              onChange={(value) => setEditValues({...editValues, issue_date: value})}
-                              placeholder="Pick date or enter text"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground">Country</label>
-                            <p className="text-sm py-2">{doc.country || 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Nationality Status:</span>
-                          <p className="mt-1">{doc.nationality_status || 'N/A'}</p>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-muted-foreground">Issue Date</label>
+                          <DateTextPicker
+                            value={editValues.issue_date}
+                            onChange={(value) => setEditValues({...editValues, issue_date: value})}
+                            placeholder="Pick date or enter text"
+                          />
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -416,20 +406,11 @@ export function DocumentViewDialog({ document, open, onClose }: DocumentViewDial
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div className="text-sm">
                           <div>
                             <span className="text-muted-foreground">Issue Date:</span>
                             <p>{doc.issue_date ? (isNaN(Date.parse(doc.issue_date)) ? doc.issue_date : new Date(doc.issue_date).toLocaleDateString()) : 'N/A'}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Country:</span>
-                            <p>{doc.country || 'N/A'}</p>
-                          </div>
-                        </div>
-
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Nationality Status:</span>
-                          <p>{doc.nationality_status || 'N/A'}</p>
                         </div>
 
                         {doc.notes && (
