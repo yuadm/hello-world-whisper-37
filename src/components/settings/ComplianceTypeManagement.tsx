@@ -65,7 +65,8 @@ export function ComplianceTypeManagement() {
     name: "",
     description: "",
     frequency: "",
-    has_questionnaire: false
+    has_questionnaire: false,
+    useFor: "employees" as "employees" | "clients"
   });
   const { toast } = useToast();
 
@@ -110,8 +111,9 @@ export function ComplianceTypeManagement() {
 
     try {
       console.log('Adding compliance type:', newComplianceType);
+      const tableName = newComplianceType.useFor === "employees" ? "compliance_types" : "client_compliance_types";
       const { data, error } = await supabase
-        .from('compliance_types')
+        .from(tableName)
         .insert([{
           name: newComplianceType.name,
           description: newComplianceType.description || null,
@@ -133,7 +135,7 @@ export function ComplianceTypeManagement() {
 
       console.log('Compliance type added successfully:', data);
       setComplianceTypes([...complianceTypes, data]);
-      setNewComplianceType({ name: "", description: "", frequency: "", has_questionnaire: false });
+      setNewComplianceType({ name: "", description: "", frequency: "", has_questionnaire: false, useFor: "employees" });
       setIsAddDialogOpen(false);
       
       // Notify compliance page of the change
@@ -362,6 +364,25 @@ export function ComplianceTypeManagement() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="compliance-type-usefor">Use For</Label>
+              <Select 
+                value={newComplianceType.useFor} 
+                onValueChange={(value: "employees" | "clients") => setNewComplianceType(prev => ({ ...prev, useFor: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select target" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employees">Employees</SelectItem>
+                  <SelectItem value="clients">Clients</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Choose whether this compliance type will be used for employees or clients.
+              </p>
+            </div>
             
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -383,7 +404,7 @@ export function ComplianceTypeManagement() {
               </Button>
               <Button 
                 onClick={handleAddComplianceType} 
-                disabled={!newComplianceType.name.trim() || !newComplianceType.frequency}
+                disabled={!newComplianceType.name.trim() || !newComplianceType.frequency || !newComplianceType.useFor}
                 className="bg-gradient-primary hover:opacity-90"
               >
                 Add Compliance Type
