@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
-import { Calendar, Download, AlertTriangle, Plus, Eye, Edit, Trash2, Filter, Users } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Calendar, Download, AlertTriangle, Plus, Eye, Edit, Trash2, Filter, Users, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, Clock, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ClientSpotCheckFormDialog, { ClientSpotCheckFormData } from "./ClientSpotCheckFormDialog";
@@ -52,6 +54,9 @@ export function ClientCompliancePeriodView({
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"status" | "periods">("status");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState<'name' | 'branch' | 'status' | 'completion_date'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -320,17 +325,26 @@ export function ClientCompliancePeriodView({
     }
   };
 
-  const getFilteredClients = () => {
-    let filteredClients = clients;
+  // Filtered and sorted clients
+  const filteredAndSortedClients = useMemo(() => {
+    let filtered = clients;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(client =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.branches?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     // Filter by branch
     if (selectedBranch !== "all") {
-      filteredClients = filteredClients.filter(client => client.branch_id === selectedBranch);
+      filtered = filtered.filter(client => client.branch_id === selectedBranch);
     }
 
     // Filter by status if selectedFilter is provided
     if (selectedFilter) {
-      filteredClients = filteredClients.filter(client => {
+      filtered = filtered.filter(client => {
         const record = getClientRecordForPeriod(client.id, selectedPeriod);
         const status = record?.status || 'pending';
         
@@ -349,8 +363,51 @@ export function ClientCompliancePeriodView({
       });
     }
 
-    return filteredClients;
-  };
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case 'branch':
+          aValue = a.branches?.name || 'Unassigned';
+          bValue = b.branches?.name || 'Unassigned';
+          break;
+        case 'status':
+          const aRecord = getClientRecordForPeriod(a.id, selectedPeriod);
+          const bRecord = getClientRecordForPeriod(b.id, selectedPeriod);
+          const statusOrder = { 'completed': 3, 'pending': 2, 'overdue': 1 };
+          aValue = statusOrder[aRecord?.status || 'pending'] || 0;
+          bValue = statusOrder[bRecord?.status || 'pending'] || 0;
+          break;
+        case 'completion_date':
+          const aRecordDate = getClientRecordForPeriod(a.id, selectedPeriod);
+          const bRecordDate = getClientRecordForPeriod(b.id, selectedPeriod);
+          aValue = aRecordDate?.completion_date ? new Date(aRecordDate.completion_date).getTime() : 0;
+          bValue = bRecordDate?.completion_date ? new Date(bRecordDate.completion_date).getTime() : 0;
+          break;
+        default:
+          aValue = a.name;
+          bValue = b.name;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  }, [clients, searchTerm, selectedBranch, selectedFilter, selectedPeriod, sortField, sortDirection]);
 
   const getUniqueBranches = () => {
     const branches = clients.map(client => ({
@@ -364,6 +421,24 @@ export function ClientCompliancePeriodView({
     );
     
     return uniqueBranches;
+  };
+
+  const handleSort = (field: 'name' | 'branch' | 'status' | 'completion_date') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: 'name' | 'branch' | 'status' | 'completion_date') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-4 h-4" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="w-4 h-4" />
+      : <ArrowDown className="w-4 h-4" />;
   };
 
   if (loading) {
@@ -382,162 +457,212 @@ export function ClientCompliancePeriodView({
   return (
     <div className="space-y-6">
       {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b">
-        <Button 
-          variant={activeTab === "status" ? "default" : "ghost"} 
-          size="sm"
-          onClick={() => setActiveTab("status")}
-          className={activeTab === "status" ? "border-b-2 border-primary" : ""}
-        >
-          <Users className="w-4 h-4 mr-2" />
-          Client Compliance Status
-        </Button>
-        <Button 
-          variant={activeTab === "periods" ? "default" : "ghost"} 
-          size="sm"
-          onClick={() => setActiveTab("periods")}
-          className={activeTab === "periods" ? "border-b-2 border-primary" : ""}
-        >
-          <Calendar className="w-4 h-4 mr-2" />
-          Period Records
-        </Button>
-      </div>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "status" | "periods")} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-muted/50 to-muted/30 p-1">
+          <TabsTrigger 
+            value="status" 
+            className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground"
+          >
+            <Users className="w-4 h-4" />
+            Client Compliance Status
+          </TabsTrigger>
+          <TabsTrigger 
+            value="periods"
+            className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground"
+          >
+            <Calendar className="w-4 h-4" />
+            Period Records
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Client Compliance Status Tab */}
-      {activeTab === "status" && selectedPeriod && (
-        <div className="space-y-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h3 className="text-xl font-semibold">
-                All Client - Current Period: {getPeriodLabel(selectedPeriod)}
-              </h3>
-            </div>
-            
-            <Card>
-              <CardHeader className="border-b">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="w-5 h-5" />
-                      <span className="font-medium">Client Compliance Status</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                      <SelectTrigger className="w-40 bg-background border border-input">
-                        <SelectValue placeholder="All Branches" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        <SelectItem value="all">All Branches</SelectItem>
-                        {getUniqueBranches().map((branch) => (
-                          <SelectItem key={branch.id} value={branch.id}>
-                            {branch.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+        <TabsContent value="status" className="space-y-6">
+          {selectedPeriod && (
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                      Client Compliance Overview
+                    </h3>
+                    <p className="text-muted-foreground">Current Period: {getPeriodLabel(selectedPeriod)}</p>
                   </div>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="font-medium">Client</TableHead>
-                      <TableHead className="font-medium">Branch</TableHead>
-                      <TableHead className="font-medium">Status</TableHead>
-                      <TableHead className="font-medium">Completion Date</TableHead>
-                      <TableHead className="font-medium">Notes</TableHead>
-                      <TableHead className="font-medium">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredClients().map((client) => {
-                      const record = getClientRecordForPeriod(client.id, selectedPeriod);
-                      const status = record?.status || 'pending';
-                      const isCompleted = status === 'completed';
+                
+                <Card className="bg-gradient-to-br from-card via-card/50 to-background border-border/50 shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
+                          <Shield className="w-5 h-5 text-primary" />
+                        </div>
+                        <CardTitle className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent font-bold">
+                          Client Compliance Status
+                        </CardTitle>
+                      </div>
                       
-                      return (
-                        <TableRow key={client.id} className="border-b">
-                          <TableCell className="font-medium">{client.name}</TableCell>
-                          <TableCell>{client.branches?.name || 'Unassigned'}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusBadge(status)}>
-                              {getStatusText(status)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {record?.completion_date && record.completion_date !== '' 
-                              ? record.completion_date 
-                              : '-'
-                            }
-                          </TableCell>
-                          <TableCell>
-                            {record?.notes || '-'}
-                          </TableCell>
-                          <TableCell>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        {/* Search */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search clients..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 w-64 bg-background border-border/50 focus:border-primary/50"
+                          />
+                        </div>
+                        
+                        {/* Branch Filter */}
+                        <div className="flex items-center gap-2">
+                          <Filter className="w-4 h-4 text-muted-foreground" />
+                          <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                            <SelectTrigger className="w-40 bg-background border-border/50 focus:border-primary/50">
+                              <SelectValue placeholder="All Branches" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50">
+                              <SelectItem value="all">All Branches</SelectItem>
+                              {getUniqueBranches().map((branch) => (
+                                <SelectItem key={branch.id} value={branch.id}>
+                                  {branch.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gradient-to-r from-muted/50 to-muted/30 hover:bg-muted/60">
+                          <TableHead 
+                            className="font-semibold cursor-pointer hover:bg-muted/20 transition-colors"
+                            onClick={() => handleSort('name')}
+                          >
                             <div className="flex items-center gap-2">
-                              {isCompleted ? (
-                                <>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-8 w-8 p-0"
-                                    onClick={() => {
-                                      setSelectedClient(client);
-                                      setSpotCheckDialogOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedClient(client);
-                                    setSpotCheckDialogOpen(true);
-                                  }}
-                                >
-                                  Add Record
-                                </Button>
-                              )}
+                              Client Name
+                              {getSortIcon('name')}
                             </div>
-                          </TableCell>
+                          </TableHead>
+                          <TableHead 
+                            className="font-semibold cursor-pointer hover:bg-muted/20 transition-colors"
+                            onClick={() => handleSort('branch')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Branch
+                              {getSortIcon('branch')}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="font-semibold cursor-pointer hover:bg-muted/20 transition-colors"
+                            onClick={() => handleSort('status')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Status
+                              {getSortIcon('status')}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="font-semibold cursor-pointer hover:bg-muted/20 transition-colors"
+                            onClick={() => handleSort('completion_date')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Completion Date
+                              {getSortIcon('completion_date')}
+                            </div>
+                          </TableHead>
+                          <TableHead className="font-semibold">Notes</TableHead>
+                          <TableHead className="font-semibold">Actions</TableHead>
                         </TableRow>
-                      );
-                    })}
-                    
-                    {getFilteredClients().length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No clients found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAndSortedClients.map((client) => {
+                          const record = getClientRecordForPeriod(client.id, selectedPeriod);
+                          const status = record?.status || 'pending';
+                          const isCompleted = status === 'completed';
+                      
+                           return (
+                             <TableRow key={client.id} className="group hover:bg-gradient-to-r hover:from-muted/20 hover:to-transparent transition-all duration-200 border-b border-border/50">
+                               <TableCell className="font-semibold text-foreground">{client.name}</TableCell>
+                               <TableCell className="text-muted-foreground">{client.branches?.name || 'Unassigned'}</TableCell>
+                               <TableCell>
+                                 <Badge className={`${getStatusBadge(status)} font-medium`}>
+                                   {getStatusText(status)}
+                                 </Badge>
+                               </TableCell>
+                               <TableCell className="text-muted-foreground">
+                                 {record?.completion_date && record.completion_date !== '' 
+                                   ? record.completion_date 
+                                   : '-'
+                                 }
+                               </TableCell>
+                               <TableCell className="text-muted-foreground">
+                                 <div className="max-w-xs truncate">
+                                   {record?.notes || '-'}
+                                 </div>
+                               </TableCell>
+                               <TableCell>
+                                 <div className="flex items-center gap-2">
+                                   {isCompleted ? (
+                                     <>
+                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                         <Download className="w-4 h-4" />
+                                       </Button>
+                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                         <Eye className="w-4 h-4" />
+                                       </Button>
+                                       <Button 
+                                         variant="ghost" 
+                                         size="sm" 
+                                         className="h-8 w-8 p-0"
+                                         onClick={() => {
+                                           setSelectedClient(client);
+                                           setSpotCheckDialogOpen(true);
+                                         }}
+                                       >
+                                         <Edit className="w-4 h-4" />
+                                       </Button>
+                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
+                                         <Trash2 className="w-4 h-4" />
+                                       </Button>
+                                     </>
+                                   ) : (
+                                     <Button 
+                                       variant="outline" 
+                                       size="sm"
+                                       onClick={() => {
+                                         setSelectedClient(client);
+                                         setSpotCheckDialogOpen(true);
+                                       }}
+                                     >
+                                       Add Record
+                                     </Button>
+                                   )}
+                                 </div>
+                               </TableCell>
+                             </TableRow>
+                           );
+                         })}
+                       
+                         {filteredAndSortedClients.length === 0 && (
+                           <TableRow>
+                             <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                               No clients found
+                             </TableCell>
+                           </TableRow>
+                         )}
+                       </TableBody>
+                     </Table>
+                   </CardContent>
+                 </Card>
+               </div>
+             </div>
+           )}
+         </TabsContent>
 
-      {/* Period Records Tab */}
-      {activeTab === "periods" && (
+         <TabsContent value="periods" className="space-y-6">
         <div className="space-y-6">
           {/* Period Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -650,8 +775,9 @@ export function ClientCompliancePeriodView({
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Spot Check Dialog */}
       <ClientSpotCheckFormDialog

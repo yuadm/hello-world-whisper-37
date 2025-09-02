@@ -2,7 +2,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ClientCompliancePeriodView } from "@/components/clients/ClientCompliancePeriodView";
-import { ArrowLeft, Calendar, CheckCircle, Clock, AlertTriangle, Users } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Clock, AlertTriangle, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -204,63 +204,93 @@ export default function ClientCompliance() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Button 
             variant="outline" 
             onClick={() => navigate('/compliance')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-accent/50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Compliance
           </Button>
           
-          <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-primary">{complianceType.name}</h1>
-            <p className="text-muted-foreground">{complianceType.description}</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                <Shield className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                  {complianceType.name}
+                </h1>
+                <p className="text-lg text-muted-foreground mt-1">{complianceType.description}</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Compliance Requirements Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Compliance Requirements
+        <Card className="bg-gradient-to-br from-card via-card/50 to-background border-border/50 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent font-bold">
+                Compliance Requirements
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Frequency */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Frequency</p>
-                <Badge className="bg-primary/10 text-primary border-primary/20 capitalize">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Frequency</p>
+                <Badge className="bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-primary/30 capitalize px-3 py-1 text-sm font-medium">
                   {complianceType.frequency}
                 </Badge>
               </div>
 
               {/* Current Period */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Current Period</p>
-                <p className="text-lg font-semibold">{currentPeriod}</p>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Current Period</p>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <p className="text-lg font-bold text-foreground">{currentPeriod}</p>
+                </div>
               </div>
 
               {/* Client Compliance */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Client Compliance</p>
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.completedClients}/{stats.totalClients}</p>
-                  <p className="text-sm text-muted-foreground">{stats.completionRate.toFixed(0)}% compliant</p>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Client Compliance</p>
+                <div className="space-y-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-primary">{stats.completedClients}</span>
+                    <span className="text-lg text-muted-foreground">/</span>
+                    <span className="text-lg font-semibold">{stats.totalClients}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-success to-success/80 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(stats.completionRate, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-success">{stats.completionRate.toFixed(0)}%</span>
+                  </div>
                 </div>
               </div>
 
               {/* Branch Completion */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Branch Completion</p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Branch Performance</p>
+                <div className="space-y-3 max-h-32 overflow-y-auto">
                   {branchStats.map((branch, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">{branch.branchName}</span>
-                      <span className="font-medium">{branch.completionRate.toFixed(0)}%</span>
+                    <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-muted/30 to-transparent">
+                      <span className="text-sm font-medium text-foreground truncate">{branch.branchName}</span>
+                      <Badge className="bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-primary/20 text-xs">
+                        {branch.completionRate.toFixed(0)}%
+                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -272,76 +302,76 @@ export default function ClientCompliance() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card 
-            className={`bg-success/5 border-success/20 cursor-pointer transition-all hover:bg-success/10 ${
-              selectedFilter === 'completed' ? 'ring-2 ring-success' : ''
+            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-success/5 via-success/3 to-transparent border-success/20 hover:border-success/40 hover:shadow-lg hover:shadow-success/10 ${
+              selectedFilter === 'completed' ? 'ring-2 ring-success shadow-lg shadow-success/20 scale-105' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'completed' ? null : 'completed')}
           >
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-success/10">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-success/20 to-success/10 group-hover:scale-110 transition-transform duration-200">
                   <CheckCircle className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-success">{stats.completedClients}</p>
-                  <p className="text-sm text-muted-foreground">Compliant</p>
+                  <p className="text-3xl font-bold text-success">{stats.completedClients}</p>
+                  <p className="text-sm font-medium text-success/80">Compliant</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`bg-warning/5 border-warning/20 cursor-pointer transition-all hover:bg-warning/10 ${
-              selectedFilter === 'due' ? 'ring-2 ring-warning' : ''
+            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-warning/5 via-warning/3 to-transparent border-warning/20 hover:border-warning/40 hover:shadow-lg hover:shadow-warning/10 ${
+              selectedFilter === 'due' ? 'ring-2 ring-warning shadow-lg shadow-warning/20 scale-105' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'due' ? null : 'due')}
           >
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-warning/10">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-warning/20 to-warning/10 group-hover:scale-110 transition-transform duration-200">
                   <Clock className="w-6 h-6 text-warning" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-warning">{stats.dueClients}</p>
-                  <p className="text-sm text-muted-foreground">Due</p>
+                  <p className="text-3xl font-bold text-warning">{stats.dueClients}</p>
+                  <p className="text-sm font-medium text-warning/80">Due</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`bg-destructive/5 border-destructive/20 cursor-pointer transition-all hover:bg-destructive/10 ${
-              selectedFilter === 'overdue' ? 'ring-2 ring-destructive' : ''
+            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-destructive/5 via-destructive/3 to-transparent border-destructive/20 hover:border-destructive/40 hover:shadow-lg hover:shadow-destructive/10 ${
+              selectedFilter === 'overdue' ? 'ring-2 ring-destructive shadow-lg shadow-destructive/20 scale-105' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'overdue' ? null : 'overdue')}
           >
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-destructive/10">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-destructive/20 to-destructive/10 group-hover:scale-110 transition-transform duration-200">
                   <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-destructive">{stats.overdueClients}</p>
-                  <p className="text-sm text-muted-foreground">Overdue</p>
+                  <p className="text-3xl font-bold text-destructive">{stats.overdueClients}</p>
+                  <p className="text-sm font-medium text-destructive/80">Overdue</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`bg-muted/5 border-muted/20 cursor-pointer transition-all hover:bg-muted/10 ${
-              selectedFilter === 'pending' ? 'ring-2 ring-muted' : ''
+            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-muted/5 via-muted/3 to-transparent border-border/20 hover:border-border/40 hover:shadow-lg ${
+              selectedFilter === 'pending' ? 'ring-2 ring-border shadow-lg scale-105' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'pending' ? null : 'pending')}
           >
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-muted/10">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-muted/20 to-muted/10 group-hover:scale-110 transition-transform duration-200">
                   <Users className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-muted-foreground">{stats.pendingClients}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
+                  <p className="text-3xl font-bold text-muted-foreground">{stats.pendingClients}</p>
+                  <p className="text-sm font-medium text-muted-foreground/80">Pending</p>
                 </div>
               </div>
             </CardContent>
