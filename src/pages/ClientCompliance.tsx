@@ -58,16 +58,23 @@ export default function ClientCompliance() {
   useEffect(() => {
     const resolveClientComplianceTypeId = async () => {
       try {
+        console.log('Resolving client compliance type for:', complianceType.name);
+        
         const { data: existing, error } = await supabase
           .from('client_compliance_types')
           .select('id')
           .eq('name', complianceType.name)
           .maybeSingle();
+        
         if (error) throw error;
+        
         if (existing) {
+          console.log('Found existing client compliance type:', existing.id);
           setClientTypeId(existing.id);
           return;
         }
+        
+        console.log('Creating new client compliance type');
         const { data: created, error: createError } = await supabase
           .from('client_compliance_types')
           .insert({
@@ -77,7 +84,10 @@ export default function ClientCompliance() {
           })
           .select('id')
           .maybeSingle();
+          
         if (createError) throw createError;
+        
+        console.log('Created client compliance type:', created?.id);
         setClientTypeId(created?.id ?? null);
       } catch (e) {
         console.error('Failed to resolve client compliance type ID:', e);
@@ -93,7 +103,7 @@ export default function ClientCompliance() {
     if (id && complianceType) {
       resolveClientComplianceTypeId();
     }
-  }, [id, complianceType]);
+  }, [id, complianceType, toast]);
 
   useEffect(() => {
     if (clientTypeId) {

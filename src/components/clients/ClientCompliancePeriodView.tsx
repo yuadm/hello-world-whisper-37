@@ -201,6 +201,8 @@ export function ClientCompliancePeriodView({
       return;
     }
 
+    console.log('Saving spot check with complianceTypeId:', complianceTypeId);
+
     try {
       // Create or update the compliance period record without a pre-fetch to avoid 406/409
       const { data: updated, error: updateError } = await supabase
