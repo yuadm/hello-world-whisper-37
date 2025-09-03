@@ -51,14 +51,55 @@ export default function ClientCompliance() {
   const [currentPeriod, setCurrentPeriod] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [clientTypeId, setClientTypeId] = useState<string | null>(null);
   
   const complianceType = location.state?.complianceType as ComplianceType;
 
   useEffect(() => {
+    const resolveClientComplianceTypeId = async () => {
+      try {
+        const { data: existing, error } = await supabase
+          .from('client_compliance_types')
+          .select('id')
+          .eq('name', complianceType.name)
+          .maybeSingle();
+        if (error) throw error;
+        if (existing) {
+          setClientTypeId(existing.id);
+          return;
+        }
+        const { data: created, error: createError } = await supabase
+          .from('client_compliance_types')
+          .insert({
+            name: complianceType.name,
+            frequency: complianceType.frequency,
+            description: complianceType.description,
+          })
+          .select('id')
+          .maybeSingle();
+        if (createError) throw createError;
+        setClientTypeId(created?.id ?? null);
+      } catch (e) {
+        console.error('Failed to resolve client compliance type ID:', e);
+        setClientTypeId(null);
+        toast({
+          title: 'Setup required',
+          description: 'Client compliance type is not configured. Please add it in Settings.',
+          variant: 'destructive',
+        });
+      }
+    };
+
     if (id && complianceType) {
-      fetchComplianceStats();
+      resolveClientComplianceTypeId();
     }
   }, [id, complianceType]);
+
+  useEffect(() => {
+    if (clientTypeId) {
+      fetchComplianceStats();
+    }
+  }, [clientTypeId]);
 
   const getCurrentPeriod = () => {
     const now = new Date();
@@ -97,7 +138,7 @@ export default function ClientCompliance() {
       const { data: records, error: recordsError } = await supabase
         .from('client_compliance_period_records')
         .select('*')
-        .eq('client_compliance_type_id', id)
+        .eq('client_compliance_type_id', clientTypeId as string)
         .eq('period_identifier', period);
 
       if (recordsError) throw recordsError;
@@ -353,7 +394,7 @@ export default function ClientCompliance() {
 
         {/* Period View */}
         <ClientCompliancePeriodView 
-          complianceTypeId={id}
+          complianceTypeId={clientTypeId || ''}
           complianceTypeName={complianceType.name}
           frequency={complianceType.frequency}
           selectedFilter={selectedFilter}

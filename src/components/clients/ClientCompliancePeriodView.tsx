@@ -192,6 +192,14 @@ export function ClientCompliancePeriodView({
 
   const handleSpotCheckSubmit = async (data: ClientSpotCheckFormData) => {
     if (!selectedClient || !selectedPeriod) return;
+    if (!complianceTypeId) {
+      toast({
+        title: "Setup required",
+        description: "Client compliance type is not linked. Please configure it in Settings.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       // Create or update the compliance period record without a pre-fetch to avoid 406/409
