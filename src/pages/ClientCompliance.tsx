@@ -206,12 +206,12 @@ export default function ClientCompliance() {
         {/* Header */}
         <div className="space-y-6">
           <Button 
-            variant="outline" 
+            variant="ghost" 
+            size="sm" 
             onClick={() => navigate('/compliance')}
-            className="flex items-center gap-2 hover:bg-accent/50 transition-colors"
+            className="p-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Compliance
           </Button>
           
           <div className="space-y-3">
