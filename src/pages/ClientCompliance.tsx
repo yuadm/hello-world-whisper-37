@@ -230,69 +230,52 @@ export default function ClientCompliance() {
         </div>
 
         {/* Compliance Requirements Card */}
-        <Card className="bg-gradient-to-br from-card via-card/50 to-background border-border/50 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
-                <Calendar className="w-5 h-5 text-primary" />
-              </div>
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent font-bold">
-                Compliance Requirements
-              </span>
+        <Card className="card-premium animate-slide-up">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <Calendar className="w-6 h-6 text-primary" />
+              Compliance Requirements
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Frequency */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Frequency</p>
-                <Badge className="bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-primary/30 capitalize px-3 py-1 text-sm font-medium">
-                  {complianceType.frequency}
-                </Badge>
-              </div>
-
-              {/* Current Period */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Current Period</p>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <p className="text-lg font-bold text-foreground">{currentPeriod}</p>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Frequency</h3>
+                  <Badge className="capitalize">
+                    {complianceType.frequency}
+                  </Badge>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Current Period</h3>
+                  <Badge variant="secondary">
+                    {currentPeriod}
+                  </Badge>
                 </div>
               </div>
 
-              {/* Client Compliance */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Client Compliance</p>
-                <div className="space-y-2">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-primary">{stats.completedClients}</span>
-                    <span className="text-lg text-muted-foreground">/</span>
-                    <span className="text-lg font-semibold">{stats.totalClients}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-success to-success/80 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(stats.completionRate, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-success">{stats.completionRate.toFixed(0)}%</span>
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Client Compliance</h3>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stats.completedClients}/{stats.totalClients}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {stats.completionRate.toFixed(0)}% compliant
+                  </p>
                 </div>
-              </div>
-
-              {/* Branch Completion */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Branch Performance</p>
-                <div className="space-y-3 max-h-32 overflow-y-auto">
-                  {branchStats.map((branch, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-muted/30 to-transparent">
-                      <span className="text-sm font-medium text-foreground truncate">{branch.branchName}</span>
-                      <Badge className="bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-primary/20 text-xs">
-                        {branch.completionRate.toFixed(0)}%
-                      </Badge>
-                    </div>
-                  ))}
+                
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Branch Completion</h3>
+                  <div className="space-y-2">
+                    {branchStats.map((branch, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">{branch.branchName}</span>
+                        <span className="text-sm font-medium">{branch.completionRate.toFixed(0)}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -300,79 +283,71 @@ export default function ClientCompliance() {
         </Card>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card 
-            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-success/5 via-success/3 to-transparent border-success/20 hover:border-success/40 hover:shadow-lg hover:shadow-success/10 ${
-              selectedFilter === 'completed' ? 'ring-2 ring-success shadow-lg shadow-success/20 scale-105' : ''
+            className={`card-premium border-success/20 bg-gradient-to-br from-success-soft to-card cursor-pointer transition-all duration-300 hover:shadow-glow ${
+              selectedFilter === 'completed' ? 'ring-2 ring-success' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'completed' ? null : 'completed')}
           >
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-success/20 to-success/10 group-hover:scale-110 transition-transform duration-200">
-                  <CheckCircle className="w-6 h-6 text-success" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-success">{stats.completedClients}</p>
-                  <p className="text-sm font-medium text-success/80">Compliant</p>
+                  <p className="text-sm font-medium text-muted-foreground">Compliant</p>
+                  <p className="text-2xl font-bold text-success">{stats.completedClients}</p>
                 </div>
+                <CheckCircle className="w-8 h-8 text-success" />
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-warning/5 via-warning/3 to-transparent border-warning/20 hover:border-warning/40 hover:shadow-lg hover:shadow-warning/10 ${
-              selectedFilter === 'due' ? 'ring-2 ring-warning shadow-lg shadow-warning/20 scale-105' : ''
+            className={`card-premium border-warning/20 bg-gradient-to-br from-warning-soft to-card cursor-pointer transition-all duration-300 hover:shadow-glow ${
+              selectedFilter === 'due' ? 'ring-2 ring-warning' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'due' ? null : 'due')}
           >
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-warning/20 to-warning/10 group-hover:scale-110 transition-transform duration-200">
-                  <Clock className="w-6 h-6 text-warning" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-warning">{stats.dueClients}</p>
-                  <p className="text-sm font-medium text-warning/80">Due</p>
+                  <p className="text-sm font-medium text-muted-foreground">Due</p>
+                  <p className="text-2xl font-bold text-warning">{stats.dueClients}</p>
                 </div>
+                <Clock className="w-8 h-8 text-warning" />
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-destructive/5 via-destructive/3 to-transparent border-destructive/20 hover:border-destructive/40 hover:shadow-lg hover:shadow-destructive/10 ${
-              selectedFilter === 'overdue' ? 'ring-2 ring-destructive shadow-lg shadow-destructive/20 scale-105' : ''
+            className={`card-premium border-destructive/20 bg-gradient-to-br from-destructive-soft to-card cursor-pointer transition-all duration-300 hover:shadow-glow ${
+              selectedFilter === 'overdue' ? 'ring-2 ring-destructive' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'overdue' ? null : 'overdue')}
           >
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-destructive/20 to-destructive/10 group-hover:scale-110 transition-transform duration-200">
-                  <AlertTriangle className="w-6 h-6 text-destructive" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-destructive">{stats.overdueClients}</p>
-                  <p className="text-sm font-medium text-destructive/80">Overdue</p>
+                  <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+                  <p className="text-2xl font-bold text-destructive">{stats.overdueClients}</p>
                 </div>
+                <AlertTriangle className="w-8 h-8 text-destructive" />
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className={`group cursor-pointer transition-all duration-300 bg-gradient-to-br from-muted/5 via-muted/3 to-transparent border-border/20 hover:border-border/40 hover:shadow-lg ${
-              selectedFilter === 'pending' ? 'ring-2 ring-border shadow-lg scale-105' : ''
+            className={`card-premium border-muted/20 bg-gradient-to-br from-muted/5 to-card cursor-pointer transition-all duration-300 hover:shadow-glow ${
+              selectedFilter === 'pending' ? 'ring-2 ring-border' : ''
             }`}
             onClick={() => setSelectedFilter(selectedFilter === 'pending' ? null : 'pending')}
           >
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-muted/20 to-muted/10 group-hover:scale-110 transition-transform duration-200">
-                  <Users className="w-6 h-6 text-muted-foreground" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-muted-foreground">{stats.pendingClients}</p>
-                  <p className="text-sm font-medium text-muted-foreground/80">Pending</p>
+                  <p className="text-sm font-medium text-muted-foreground">Pending</p>
+                  <p className="text-2xl font-bold text-muted-foreground">{stats.pendingClients}</p>
                 </div>
+                <Users className="w-8 h-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
