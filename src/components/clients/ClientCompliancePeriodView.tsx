@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import ClientSpotCheckFormDialog, { ClientSpotCheckFormData } from "./ClientSpotCheckFormDialog";
 import { ClientSpotCheckViewDialog } from "./ClientSpotCheckViewDialog";
 import { ClientDeleteConfirmDialog } from "./ClientDeleteConfirmDialog";
+import { ClientAddComplianceRecordModal } from "./ClientAddComplianceRecordModal";
 import { generateClientSpotCheckPdf } from "@/lib/client-spot-check-pdf";
 import { useCompany } from "@/contexts/CompanyContext";
 
@@ -77,6 +78,7 @@ export function ClientCompliancePeriodView({
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [spotCheckDialogOpen, setSpotCheckDialogOpen] = useState(false);
+  const [genericRecordDialogOpen, setGenericRecordDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"status" | "periods">("status");
@@ -361,6 +363,77 @@ export function ClientCompliancePeriodView({
         variant: "destructive",
       });
     }
+  };
+
+  const handleGenericRecordSubmit = async (data: {
+    clientId: string;
+    periodIdentifier: string;
+    completionDate: string;
+    notes?: string;
+  }) => {
+    if (!complianceTypeId) {
+      toast({
+        title: "Setup required",
+        description: "Client compliance type is not linked. Please configure it in Settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create or update the compliance period record
+      const { data: updated, error: updateError } = await supabase
+        .from('client_compliance_period_records')
+        .update({
+          status: 'completed',
+          completion_date: data.completionDate,
+          completion_method: 'date_entry',
+          notes: data.notes
+        })
+        .eq('client_compliance_type_id', complianceTypeId)
+        .eq('client_id', data.clientId)
+        .eq('period_identifier', data.periodIdentifier)
+        .select('id');
+
+      if (updateError) throw updateError;
+
+      // If no existing record was updated, create a new one
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('client_compliance_period_records')
+          .insert({
+            client_compliance_type_id: complianceTypeId,
+            client_id: data.clientId,
+            period_identifier: data.periodIdentifier,
+            status: 'completed',
+            completion_date: data.completionDate,
+            completion_method: 'date_entry',
+            notes: data.notes
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      toast({
+        title: "Record added",
+        description: `Compliance record for ${selectedClient?.name} has been saved successfully.`,
+      });
+
+      setGenericRecordDialogOpen(false);
+      setSelectedClient(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error saving compliance record:', error);
+      toast({
+        title: "Error saving record",
+        description: "Could not save the compliance record. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isSpotCheckCompliance = () => {
+    return complianceTypeName.toLowerCase().includes('spot');
   };
 
   const handleDownloadPeriod = async (period: PeriodData) => {
@@ -918,16 +991,20 @@ export function ClientCompliancePeriodView({
                                         </Button>
                                      </>
                                    ) : (
-                                     <Button 
-                                       variant="outline" 
-                                       size="sm"
-                                       onClick={() => {
-                                         setSelectedClient(client);
-                                         setSpotCheckDialogOpen(true);
-                                       }}
-                                     >
-                                       Add Record
-                                     </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedClient(client);
+                                          if (isSpotCheckCompliance()) {
+                                            setSpotCheckDialogOpen(true);
+                                          } else {
+                                            setGenericRecordDialogOpen(true);
+                                          }
+                                        }}
+                                      >
+                                        Add Record
+                                      </Button>
                                    )}
                                  </div>
                                </TableCell>
@@ -1082,6 +1159,22 @@ export function ClientCompliancePeriodView({
         initialData={editingSpotCheckData}
         periodIdentifier={selectedPeriod}
         frequency={frequency}
+      />
+
+      {/* Generic Compliance Record Dialog */}
+      <ClientAddComplianceRecordModal
+        open={genericRecordDialogOpen}
+        onOpenChange={(open) => {
+          setGenericRecordDialogOpen(open);
+          if (!open) {
+            setSelectedClient(null);
+          }
+        }}
+        onSubmit={handleGenericRecordSubmit}
+        clientId={selectedClient?.id || ''}
+        clientName={selectedClient?.name || ''}
+        periodIdentifier={selectedPeriod}
+        complianceTypeName={complianceTypeName}
       />
 
       {/* View Spot Check Dialog */}
