@@ -6,8 +6,10 @@ import { format } from 'date-fns'
 
 export interface ClientSpotCheckFormData {
   serviceUserName: string;
+  careWorkers: string;
   date: string;
-  completedBy: string;
+  time: string;
+  performedBy: string;
   observations: Array<{
     label: string;
     value: string;
@@ -223,8 +225,16 @@ export async function generateClientSpotCheckPdf(data: ClientSpotCheckFormData, 
   drawText('A. Details', { bold: true, size: 13 })
   addSpacer(4)
   drawKeyVal("Service User's Name", data.serviceUserName)
+  
+  // Split care workers by comma and display them
+  const careWorkersList = data.careWorkers?.split(',').map(w => w.trim()).filter(Boolean) || []
+  careWorkersList.forEach((worker, index) => {
+    drawKeyVal(`Care Worker ${index + 1}`, worker)
+  })
+  
   drawKeyVal('Date of Spot Check', data.date)
-  drawKeyVal('Completed By', data.completedBy)
+  drawKeyVal('Time', data.time)
+  drawKeyVal('Performed By', data.performedBy)
 
   addSpacer(16)
   drawText('B. Assessment Questions', { bold: true, size: 13 })
