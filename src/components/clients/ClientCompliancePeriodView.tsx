@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ClientSpotCheckFormDialog, { ClientSpotCheckFormData } from "./ClientSpotCheckFormDialog";
+import { ClientSpotCheckViewDialog } from "./ClientSpotCheckViewDialog";
 import { generateClientSpotCheckPdf } from "@/lib/client-spot-check-pdf";
 import { useCompany } from "@/contexts/CompanyContext";
 
@@ -81,6 +82,8 @@ export function ClientCompliancePeriodView({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<'name' | 'branch' | 'status' | 'completion_date'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedSpotCheckRecord, setSelectedSpotCheckRecord] = useState<any>(null);
   const { toast } = useToast();
   const { companySettings } = useCompany();
 
@@ -791,9 +794,48 @@ export function ClientCompliancePeriodView({
                                         >
                                           <Download className="w-4 h-4" />
                                         </Button>
-                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                         <Eye className="w-4 h-4" />
-                                       </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-8 w-8 p-0"
+                                          onClick={async () => {
+                                            try {
+                                              const record = getClientRecordForPeriod(client.id, selectedPeriod);
+                                              if (!record) return;
+                                              
+                                              // Fetch the client spot check record
+                                              const { data: spotCheckData, error } = await supabase
+                                                .from('client_spot_check_records')
+                                                .select('*')
+                                                .eq('compliance_record_id', record.id)
+                                                .maybeSingle();
+                                              
+                                              if (error) throw error;
+                                              if (!spotCheckData) {
+                                                toast({
+                                                  title: "No spot check data",
+                                                  description: "No spot check record found for this client.",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+                                              
+                                              setSelectedClient(client);
+                                              setSelectedSpotCheckRecord(spotCheckData);
+                                              setViewDialogOpen(true);
+                                              
+                                            } catch (error) {
+                                              console.error('Error viewing client record:', error);
+                                              toast({
+                                                title: "View failed",
+                                                description: "Could not load the client record. Please try again.",
+                                                variant: "destructive",
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Eye className="w-4 h-4" />
+                                        </Button>
                                        <Button 
                                          variant="ghost" 
                                          size="sm" 
@@ -805,9 +847,53 @@ export function ClientCompliancePeriodView({
                                        >
                                          <Edit className="w-4 h-4" />
                                        </Button>
-                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
-                                         <Trash2 className="w-4 h-4" />
-                                       </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                          onClick={async () => {
+                                            try {
+                                              const record = getClientRecordForPeriod(client.id, selectedPeriod);
+                                              if (!record) return;
+                                              
+                                              if (confirm(`Are you sure you want to delete the spot check record for ${client.name}? This action cannot be undone.`)) {
+                                                // Delete the spot check record first
+                                                const { error: spotCheckError } = await supabase
+                                                  .from('client_spot_check_records')
+                                                  .delete()
+                                                  .eq('compliance_record_id', record.id);
+                                                
+                                                if (spotCheckError) throw spotCheckError;
+                                                
+                                                // Delete the compliance record
+                                                const { error: complianceError } = await supabase
+                                                  .from('client_compliance_period_records')
+                                                  .delete()
+                                                  .eq('id', record.id);
+                                                
+                                                if (complianceError) throw complianceError;
+                                                
+                                                toast({
+                                                  title: "Record deleted",
+                                                  description: `Spot check record for ${client.name} has been deleted.`,
+                                                });
+                                                
+                                                // Refresh the data
+                                                fetchData();
+                                              }
+                                              
+                                            } catch (error) {
+                                              console.error('Error deleting client record:', error);
+                                              toast({
+                                                title: "Delete failed",
+                                                description: "Could not delete the record. Please try again.",
+                                                variant: "destructive",
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
                                      </>
                                    ) : (
                                      <Button 
@@ -967,6 +1053,14 @@ export function ClientCompliancePeriodView({
         onSubmit={handleSpotCheckSubmit}
         periodIdentifier={selectedPeriod}
         frequency={frequency}
+      />
+
+      {/* View Spot Check Dialog */}
+      <ClientSpotCheckViewDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        client={selectedClient}
+        spotCheckRecord={selectedSpotCheckRecord}
       />
     </div>
   );
