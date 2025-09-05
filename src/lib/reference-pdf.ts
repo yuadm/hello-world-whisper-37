@@ -67,10 +67,19 @@ export const generateReferencePDF = async (
   // Set font to support Unicode characters
   pdf.setFont('helvetica', 'normal');
 
+  // Add page border
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.5);
+  pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
   // Helper function to ensure space on page
   const ensureSpace = (needed: number) => {
     if (yPosition + needed > pageHeight - 30) {
       pdf.addPage();
+      // Add border to new page
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
       yPosition = 30;
     }
   };
@@ -425,6 +434,11 @@ export const generateManualReferencePDF = async (
   // Set font to support Unicode characters
   pdf.setFont('helvetica', 'normal');
 
+  // Add page border
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.5);
+  pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
   // Add company logo if available
   if (companySettings.logo) {
     try {
@@ -474,6 +488,10 @@ export const generateManualReferencePDF = async (
   const ensureSpace = (needed: number) => {
     if (yPosition + needed > pageHeight - 30) {
       pdf.addPage();
+      // Add border to new page
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
       yPosition = 30;
     }
   };
