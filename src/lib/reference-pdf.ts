@@ -64,10 +64,6 @@ export const generateReferencePDF = async (
   const lineHeight = 7;
   let yPosition = 30;
 
-  // Add background color
-  pdf.setFillColor(249, 249, 251); // #f9f9fb
-  pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-
   // Set font to support Unicode characters
   pdf.setFont('helvetica', 'normal');
 
@@ -75,9 +71,6 @@ export const generateReferencePDF = async (
   const ensureSpace = (needed: number) => {
     if (yPosition + needed > pageHeight - 30) {
       pdf.addPage();
-      // Add background color to new page
-      pdf.setFillColor(249, 249, 251); // #f9f9fb
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
       yPosition = 30;
     }
   };
@@ -416,10 +409,6 @@ export const generateManualReferencePDF = async (
   const lineHeight = 7;
   let yPosition = 30;
 
-  // Add background color
-  pdf.setFillColor(249, 249, 251); // #f9f9fb
-  pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-
   // Set font to support Unicode characters
   pdf.setFont('helvetica', 'normal');
 
@@ -472,9 +461,6 @@ export const generateManualReferencePDF = async (
   const ensureSpace = (needed: number) => {
     if (yPosition + needed > pageHeight - 30) {
       pdf.addPage();
-      // Add background color to new page
-      pdf.setFillColor(249, 249, 251); // #f9f9fb
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
       yPosition = 30;
     }
   };
