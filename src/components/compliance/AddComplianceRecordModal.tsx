@@ -431,12 +431,12 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
 
           <div className="space-y-3">
             <Label>Record Type</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={recordType === 'date' ? 'default' : 'outline'}
                 onClick={() => setRecordType('date')}
-                className="flex-1 min-w-[140px]"
+                className="w-full"
               >
                 Date
               </Button>
@@ -444,7 +444,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
                 type="button"
                 variant={recordType === 'new' ? 'default' : 'outline'}
                 onClick={() => setRecordType('new')}
-                className="flex-1 min-w-[140px]"
+                className="w-full text-center px-2"
               >
                 New (before employee joined)
               </Button>
@@ -456,7 +456,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
                     setRecordType('spotcheck');
                     setSpotcheckOpen(true);
                   }}
-                  className="flex-1 min-w-[140px]"
+                  className="w-full col-span-1 sm:col-span-2"
                 >
                   Complete Spot Check
                 </Button>
@@ -469,7 +469,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
                     setRecordType('supervision');
                     setSupervisionOpen(true);
                   }}
-                  className="flex-1 min-w-[140px]"
+                  className="w-full col-span-1 sm:col-span-2"
                 >
                   Complete Supervision
                 </Button>
@@ -482,7 +482,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
                     setRecordType('annualappraisal');
                     setAnnualOpen(true);
                   }}
-                  className="flex-1 min-w-[140px]"
+                  className="w-full col-span-1 sm:col-span-2"
                 >
                   Complete Annual Appraisal
                 </Button>
