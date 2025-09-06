@@ -535,21 +535,26 @@ export default function DocumentSigningView() {
                 </p>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="h-[60vh]">
+                <div className="h-[60vh] overflow-y-auto">
                   {pdfUrl && (
-                    <EnhancedPDFViewer
-                      pdfUrl={pdfUrl}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                      scale={scale}
-                      onScaleChange={setScale}
-                      className="h-full"
-                      showToolbar={true}
-                      overlayContent={
-                        <>
-                          {templateFields
-                            ?.filter(field => field.page_number === currentPage)
-                            .map((field) => {
+                    <>
+                      {Array.from({ length: templateFields ? Math.max(...templateFields.map(f => f.page_number)) : 1 }, (_, index) => {
+                        const pageNumber = index + 1;
+                        return (
+                          <div key={pageNumber} className="relative border-b border-gray-100 last:border-b-0">
+                            <EnhancedPDFViewer
+                              pdfUrl={pdfUrl}
+                              currentPage={pageNumber}
+                              onPageChange={() => {}} // No pagination needed
+                              scale={scale}
+                              onScaleChange={setScale}
+                              className="h-auto"
+                              showToolbar={pageNumber === 1} // Only show toolbar on first page
+                              overlayContent={
+                                <>
+                                  {templateFields
+                                    ?.filter(field => field.page_number === pageNumber)
+                                    .map((field) => {
                               const isCompleted = field.field_type === "signature" 
                                 ? signatures[field.id] 
                                 : fieldValues[field.id];
@@ -589,9 +594,13 @@ export default function DocumentSigningView() {
                                 </div>
                               );
                             })}
-                        </>
-                      }
-                    />
+                                </>
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -656,21 +665,26 @@ export default function DocumentSigningView() {
                     Click on highlighted fields to complete them
                   </p>
                 </CardHeader>
-                <CardContent className="h-full p-0">
+                <CardContent className="h-full p-0 overflow-y-auto">
                   {pdfUrl && (
-                    <EnhancedPDFViewer
-                      pdfUrl={pdfUrl}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                      scale={scale}
-                      onScaleChange={setScale}
-                      className="h-full"
-                      showToolbar={true}
-                      overlayContent={
-                        <>
-                          {templateFields
-                            ?.filter(field => field.page_number === currentPage)
-                            .map((field) => {
+                    <>
+                      {Array.from({ length: templateFields ? Math.max(...templateFields.map(f => f.page_number)) : 1 }, (_, index) => {
+                        const pageNumber = index + 1;
+                        return (
+                          <div key={pageNumber} className="relative border-b border-gray-100 last:border-b-0">
+                            <EnhancedPDFViewer
+                              pdfUrl={pdfUrl}
+                              currentPage={pageNumber}
+                              onPageChange={() => {}} // No pagination needed
+                              scale={scale}
+                              onScaleChange={setScale}
+                              className="h-auto"
+                              showToolbar={pageNumber === 1} // Only show toolbar on first page
+                              overlayContent={
+                                <>
+                                  {templateFields
+                                    ?.filter(field => field.page_number === pageNumber)
+                                    .map((field) => {
                               const isCompleted = field.field_type === "signature" 
                                 ? signatures[field.id] 
                                 : fieldValues[field.id];
@@ -710,9 +724,13 @@ export default function DocumentSigningView() {
                                 </div>
                               );
                             })}
-                        </>
-                      }
-                    />
+                                </>
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
                 </CardContent>
               </Card>
