@@ -7,11 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, FileText } from "lucide-react";
+import { 
+  Loader2, 
+  FileText, 
+  PenTool, 
+  CheckCircle2, 
+  Shield, 
+  User, 
+  Calendar, 
+  RotateCcw,
+  Eye,
+  Smartphone,
+  Clock,
+  Mail,
+  Download,
+  Lock
+} from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import { EnhancedPDFViewer } from "@/components/document-signing/EnhancedPDFViewer";
-import "@/lib/pdf-config"; // Initialize PDF.js configuration
+import "@/lib/pdf-config";
 
 interface SigningRequestData {
   id: string;
@@ -58,7 +78,21 @@ export default function DocumentSigningView() {
   const [signatures, setSignatures] = useState<Record<string, string>>({});
   const [isSigningInProgress, setIsSigningInProgress] = useState(false);
   const [hasBeenSigned, setHasBeenSigned] = useState(false);
+  const [selectedField, setSelectedField] = useState<string | null>(null);
+  const [showFieldModal, setShowFieldModal] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const signatureRefs = useRef<Record<string, SignatureCanvas | null>>({});
+
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+    return () => window.removeEventListener('resize', checkMobileView);
+  }, []);
 
   // Fetch signing request data
   const { data: signingData, isLoading, error } = useQuery({
@@ -272,6 +306,7 @@ export default function DocumentSigningView() {
     if (canvas && !canvas.isEmpty()) {
       const dataURL = canvas.toDataURL();
       setSignatures(prev => ({ ...prev, [fieldId]: dataURL }));
+      toast.success("Signature captured successfully!");
     }
   };
 
@@ -285,6 +320,16 @@ export default function DocumentSigningView() {
       delete newSignatures[fieldId];
       return newSignatures;
     });
+  };
+
+  const handleFieldClick = (fieldId: string) => {
+    setSelectedField(fieldId);
+    setShowFieldModal(true);
+  };
+
+  const closeFieldModal = () => {
+    setShowFieldModal(false);
+    setSelectedField(null);
   };
 
   const handleSubmit = () => {
@@ -320,25 +365,38 @@ export default function DocumentSigningView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading document...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full animate-pulse opacity-20"></div>
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary relative z-10" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Preparing Your Document</h2>
+            <p className="text-muted-foreground mb-4">We're loading your secure document for signing</p>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Encrypted & Secure</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error || !signingData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-red-600">Document Not Found</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-destructive/5 via-background to-muted/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+              <Lock className="h-8 w-8 text-destructive" />
+            </div>
+            <CardTitle className="text-destructive text-xl">Document Not Found</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="mb-4">The signing link is invalid or has expired.</p>
-            <Button onClick={() => navigate("/")}>Return to Home</Button>
+            <p className="text-muted-foreground mb-6">The signing link is invalid, expired, or no longer available.</p>
+            <Button onClick={() => navigate("/")} className="w-full">Return to Home</Button>
           </CardContent>
         </Card>
       </div>
@@ -352,21 +410,28 @@ export default function DocumentSigningView() {
 
   if (isAlreadySigned || isExpired) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-green-600">
-              {isExpired ? "Link Expired" : "Already Signed"}
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-emerald-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="text-green-600 text-xl">
+              {isExpired ? "Link Expired" : "Document Signed Successfully"}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="mb-4">
+            <p className="text-muted-foreground mb-6">
               {isExpired 
                 ? "This signing link has expired and is no longer accessible." 
-                : "This document has already been signed."
+                : "This document has been successfully signed and completed."
               }
             </p>
-            <Button onClick={() => navigate("/")}>Return to Home</Button>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+              <Shield className="h-4 w-4" />
+              <span>Secured & Encrypted</span>
+            </div>
+            <Button onClick={() => navigate("/")} className="w-full">Return to Home</Button>
           </CardContent>
         </Card>
       </div>
@@ -383,198 +448,501 @@ export default function DocumentSigningView() {
   });
   const isFormComplete = requiredFields.length > 0 && completedRequiredFields.length === requiredFields.length;
 
+  const selectedFieldData = templateFields?.find(field => field.id === selectedField);
+  const completionPercentage = requiredFields.length > 0 ? (completedRequiredFields.length / requiredFields.length) * 100 : 100;
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-4">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {signingData.title}
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Please review and sign this document: {signingData.document_templates.name}
-            </p>
-            {signingData.message && (
-              <p className="text-sm italic">{signingData.message}</p>
-            )}
-            <div className="mt-4 flex items-center gap-4">
-              <div className="text-sm text-muted-foreground">
-                Progress: {completedRequiredFields.length} of {requiredFields.length} required fields completed
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
+      {/* Modern Header */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-primary/10 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-white" />
               </div>
-              <div className="w-48 bg-muted rounded-full h-2">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${requiredFields.length > 0 ? (completedRequiredFields.length / requiredFields.length) * 100 : 0}%` }}
-                />
+              <div>
+                <h1 className="font-bold text-xl text-foreground">{signingData.title}</h1>
+                <p className="text-sm text-muted-foreground">{signingData.document_templates.name}</p>
               </div>
             </div>
-          </CardHeader>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* PDF Viewer */}
-          <div className="lg:col-span-3">
-            <Card className="h-[800px]">
-              <CardHeader className="pb-4">
-                <CardTitle>Document</CardTitle>
-              </CardHeader>
-              <CardContent className="h-full p-0">
-                {pdfUrl && (
-                  <EnhancedPDFViewer
-                    pdfUrl={pdfUrl}
-                    currentPage={currentPage}
-                    onPageChange={setCurrentPage}
-                    scale={scale}
-                    onScaleChange={setScale}
-                    className="h-full"
-                    overlayContent={
-                      <>
-                        {/* Render interactive field overlays */}
-                        {templateFields
-                          ?.filter(field => field.page_number === currentPage)
-                          .map((field) => (
-                            <div
-                              key={field.id}
-                              className="absolute border-2 border-blue-400 bg-blue-100/80 rounded cursor-pointer flex items-center justify-center text-xs font-medium text-blue-700 hover:bg-blue-200/80 transition-colors"
-                              style={{
-                                left: field.x_position * scale,
-                                top: field.y_position * scale,
-                                width: field.width * scale,
-                                height: field.height * scale,
-                                zIndex: 10
-                              }}
-                              title={`${field.field_name}${field.is_required ? ' (Required)' : ''}`}
-                            >
-                              {field.field_type === "signature" ? "✍️" : 
-                               field.field_type === "checkbox" ? "☐" :
-                               field.field_type === "date" ? "📅" : "📝"}
-                              <span className="ml-1 truncate">
-                                {field.field_name}
-                              </span>
-                            </div>
-                          ))}
-                      </>
-                    }
-                  />
-                )}
-              </CardContent>
-            </Card>
+            
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="flex items-center gap-1.5 bg-green-50 text-green-700 border-green-200">
+                <Shield className="h-3 w-3" />
+                <span className="hidden sm:inline">Secure Signing</span>
+                <span className="sm:hidden">Secure</span>
+              </Badge>
+              
+              {isMobileView && (
+                <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200">
+                  <Smartphone className="h-3 w-3" />
+                  Mobile Optimized
+                </Badge>
+              )}
+            </div>
           </div>
+          
+          {/* Progress Section */}
+          <div className="mt-4 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Progress: {completedRequiredFields.length} of {requiredFields.length} fields completed</span>
+              </div>
+              <div className="text-sm font-medium text-primary">
+                {Math.round(completionPercentage)}% Complete
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
+              {completionPercentage === 100 && (
+                <div className="absolute -top-1 right-0 animate-bounce">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {signingData.message && (
+            <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-sm text-primary/80 italic">"{signingData.message}"</p>
+            </div>
+          )}
+        </div>
+      </div>
 
-          {/* Form Fields Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle>Complete the Form</CardTitle>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {isMobileView ? (
+          /* Mobile Layout */
+          <div className="space-y-6">
+            {/* Document Viewer */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Review Document
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Fill in all required fields to sign the document
+                  Tap the highlighted areas to complete fields
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4 max-h-[600px] overflow-y-auto">
-                {/* Show all fields grouped by page */}
-                {templateFields && templateFields.length > 0 ? (
-                  Object.entries(
-                    templateFields.reduce((acc, field) => {
-                      if (!acc[field.page_number]) acc[field.page_number] = [];
-                      acc[field.page_number].push(field);
-                      return acc;
-                    }, {} as Record<number, TemplateField[]>)
-                  ).map(([pageNum, fields]) => (
-                    <div key={pageNum} className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
-                        <span>Page {pageNum}</span>
-                        {parseInt(pageNum) === currentPage && (
-                          <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Current</span>
-                        )}
-                      </div>
-                      
-                      {fields.map((field) => (
-                        <div key={field.id} className="space-y-2 p-3 border rounded-lg bg-muted/50">
-                          <Label className="flex items-center gap-2 text-sm">
-                            {field.field_name}
-                            {field.is_required && <span className="text-red-500">*</span>}
-                            {(field.field_type === "signature" ? signatures[field.id] : fieldValues[field.id]) && (
-                              <span className="text-green-600 text-xs">✓</span>
-                            )}
-                          </Label>
-
-                          {field.field_type === "signature" ? (
-                            <div className="space-y-2">
-                              <div className="border border-dashed border-gray-300 rounded p-2 bg-white">
-                                <SignatureCanvas
-                                  ref={(ref) => (signatureRefs.current[field.id] = ref)}
-                                  canvasProps={{
-                                    width: 250,
-                                    height: 100,
-                                    className: "w-full h-20 border rounded",
+              <CardContent className="p-0">
+                <div className="h-[60vh]">
+                  {pdfUrl && (
+                    <EnhancedPDFViewer
+                      pdfUrl={pdfUrl}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      scale={scale}
+                      onScaleChange={setScale}
+                      className="h-full"
+                      showToolbar={true}
+                      overlayContent={
+                        <>
+                          {templateFields
+                            ?.filter(field => field.page_number === currentPage)
+                            .map((field) => {
+                              const isCompleted = field.field_type === "signature" 
+                                ? signatures[field.id] 
+                                : fieldValues[field.id];
+                              
+                              return (
+                                <div
+                                  key={field.id}
+                                  onClick={() => handleFieldClick(field.id)}
+                                  className={`absolute border-2 rounded-lg cursor-pointer flex items-center justify-center text-xs font-medium transition-all duration-200 hover:scale-105 ${
+                                    isCompleted
+                                      ? "border-green-400 bg-green-100/90 text-green-700"
+                                      : field.is_required
+                                      ? "border-red-400 bg-red-100/90 text-red-700 animate-pulse"
+                                      : "border-blue-400 bg-blue-100/90 text-blue-700"
+                                  }`}
+                                  style={{
+                                    left: field.x_position * scale,
+                                    top: field.y_position * scale,
+                                    width: field.width * scale,
+                                    height: field.height * scale,
+                                    zIndex: 10
                                   }}
-                                  onEnd={() => handleSignature(field.id)}
-                                />
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => clearSignature(field.id)}
-                                className="w-full"
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                          ) : field.field_type === "checkbox" ? (
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={field.id}
-                                checked={fieldValues[field.id] === "true"}
-                                onChange={(e) => handleFieldChange(field.id, e.target.checked.toString())}
-                                className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
-                              />
-                              <label htmlFor={field.id} className="text-sm">
-                                {field.placeholder_text || "Check if applicable"}
-                              </label>
-                            </div>
-                          ) : (
-                            <Input
-                              type={field.field_type === "date" ? "date" : "text"}
-                              value={fieldValues[field.id] || ""}
-                              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                              placeholder={field.placeholder_text || `Enter ${field.field_name.toLowerCase()}`}
-                              className="text-sm"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-sm">No form fields found for this document.</p>
-                )}
+                                  title={`${field.field_name}${field.is_required ? ' (Required)' : ''}`}
+                                >
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  ) : (
+                                    <>
+                                      {field.field_type === "signature" ? <PenTool className="h-3 w-3" /> : 
+                                       field.field_type === "checkbox" ? "☐" :
+                                       field.field_type === "date" ? <Calendar className="h-3 w-3" /> : "📝"}
+                                      <span className="ml-1 truncate text-[10px]">
+                                        {field.field_name}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </>
+                      }
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-                <div className="pt-4 space-y-2 border-t">
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={completeSigning.isPending || !isFormComplete || isSigningInProgress}
-                    className="w-full"
-                  >
-                    {completeSigning.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {!isFormComplete ? `Complete ${requiredFields.length - completedRequiredFields.length} more field${requiredFields.length - completedRequiredFields.length !== 1 ? 's' : ''}` : 'Sign Document'}
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/")}
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
+            {/* Fields Summary Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5">
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Required Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {templateFields?.filter(field => field.is_required).map((field) => {
+                    const isCompleted = field.field_type === "signature" 
+                      ? signatures[field.id] 
+                      : fieldValues[field.id];
+                    
+                    return (
+                      <Button
+                        key={field.id}
+                        variant={isCompleted ? "default" : "outline"}
+                        onClick={() => handleFieldClick(field.id)}
+                        className={`h-auto p-3 justify-start gap-2 ${
+                          isCompleted 
+                            ? "bg-green-600 hover:bg-green-700" 
+                            : "border-red-200 hover:border-red-300"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <div className="h-4 w-4 rounded-full border-2 border-current" />
+                        )}
+                        <div className="text-left">
+                          <div className="font-medium text-sm">{field.field_name}</div>
+                          <div className="text-xs opacity-70">
+                            {field.field_type === "signature" ? "Signature required" : "Information required"}
+                          </div>
+                        </div>
+                      </Button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
+        ) : (
+          /* Desktop Layout */
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* PDF Viewer */}
+            <div className="lg:col-span-3">
+              <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm h-[800px]">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 pb-4">
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Document Review
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Click on highlighted fields to complete them
+                  </p>
+                </CardHeader>
+                <CardContent className="h-full p-0">
+                  {pdfUrl && (
+                    <EnhancedPDFViewer
+                      pdfUrl={pdfUrl}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      scale={scale}
+                      onScaleChange={setScale}
+                      className="h-full"
+                      showToolbar={true}
+                      overlayContent={
+                        <>
+                          {templateFields
+                            ?.filter(field => field.page_number === currentPage)
+                            .map((field) => {
+                              const isCompleted = field.field_type === "signature" 
+                                ? signatures[field.id] 
+                                : fieldValues[field.id];
+                              
+                              return (
+                                <div
+                                  key={field.id}
+                                  onClick={() => handleFieldClick(field.id)}
+                                  className={`absolute border-2 rounded-lg cursor-pointer flex items-center justify-center text-xs font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                                    isCompleted
+                                      ? "border-green-400 bg-green-100/90 text-green-700 shadow-green-200/50"
+                                      : field.is_required
+                                      ? "border-red-400 bg-red-100/90 text-red-700 animate-pulse"
+                                      : "border-blue-400 bg-blue-100/90 text-blue-700"
+                                  }`}
+                                  style={{
+                                    left: field.x_position * scale,
+                                    top: field.y_position * scale,
+                                    width: field.width * scale,
+                                    height: field.height * scale,
+                                    zIndex: 10
+                                  }}
+                                  title={`${field.field_name}${field.is_required ? ' (Required)' : ''}`}
+                                >
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  ) : (
+                                    <>
+                                      {field.field_type === "signature" ? <PenTool className="h-4 w-4" /> : 
+                                       field.field_type === "checkbox" ? "☐" :
+                                       field.field_type === "date" ? <Calendar className="h-4 w-4" /> : "📝"}
+                                      <span className="ml-1 truncate">
+                                        {field.field_name}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </>
+                      }
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Form Fields Sidebar */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-4 shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5">
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Complete the Form
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Fill in all required fields to sign the document
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {/* Quick Status Overview */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-lg font-bold text-green-600">{completedRequiredFields.length}</div>
+                      <div className="text-xs text-green-600">Completed</div>
+                    </div>
+                    <div className="text-center p-2 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="text-lg font-bold text-orange-600">{requiredFields.length - completedRequiredFields.length}</div>
+                      <div className="text-xs text-orange-600">Remaining</div>
+                    </div>
+                    <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-lg font-bold text-blue-600">{templateFields?.length || 0}</div>
+                      <div className="text-xs text-blue-600">Total Fields</div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Field List */}
+                  {templateFields && templateFields.length > 0 ? (
+                    <div className="space-y-3">
+                      {templateFields.filter(field => field.is_required).map((field) => {
+                        const isCompleted = field.field_type === "signature" 
+                          ? signatures[field.id] 
+                          : fieldValues[field.id];
+                        
+                        return (
+                          <div 
+                            key={field.id} 
+                            className={`p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:shadow-md ${
+                              isCompleted 
+                                ? "border-green-300 bg-green-50" 
+                                : "border-red-300 bg-red-50 animate-pulse"
+                            }`}
+                            onClick={() => {
+                              setCurrentPage(field.page_number);
+                              handleFieldClick(field.id);
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <div className="h-4 w-4 rounded-full border-2 border-red-400" />
+                                )}
+                                <div>
+                                  <div className="font-medium text-sm">{field.field_name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Page {field.page_number} • {field.field_type}
+                                  </div>
+                                </div>
+                              </div>
+                              {!isCompleted && <span className="text-red-500 text-xs font-bold">Required</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm text-center py-4">No form fields found for this document.</p>
+                  )}
+
+                  <Separator />
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={completeSigning.isPending || !isFormComplete || isSigningInProgress}
+                      className="w-full h-12 text-base font-semibold bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                      size="lg"
+                    >
+                      {completeSigning.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Signing Document...
+                        </>
+                      ) : isFormComplete ? (
+                        <>
+                          <PenTool className="mr-2 h-5 w-5" />
+                          Sign Document
+                        </>
+                      ) : (
+                        <>
+                          Complete {requiredFields.length - completedRequiredFields.length} more field{requiredFields.length - completedRequiredFields.length !== 1 ? 's' : ''}
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate("/")}
+                      className="w-full"
+                      disabled={completeSigning.isPending}
+                    >
+                      Cancel Signing
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Field Modal for Mobile/Focus Mode */}
+        <Dialog open={showFieldModal} onOpenChange={closeFieldModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedFieldData?.field_type === "signature" ? (
+                  <PenTool className="h-5 w-5" />
+                ) : selectedFieldData?.field_type === "checkbox" ? (
+                  "☐"
+                ) : selectedFieldData?.field_type === "date" ? (
+                  <Calendar className="h-5 w-5" />
+                ) : (
+                  "📝"
+                )}
+                {selectedFieldData?.field_name}
+                {selectedFieldData?.is_required && <Badge variant="destructive">Required</Badge>}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedFieldData && (
+                <>
+                  <div className="text-sm text-muted-foreground">
+                    Page {selectedFieldData.page_number} • {selectedFieldData.field_type}
+                    {selectedFieldData.placeholder_text && (
+                      <div className="mt-1 text-xs italic">"{selectedFieldData.placeholder_text}"</div>
+                    )}
+                  </div>
+
+                  {selectedFieldData.field_type === "signature" ? (
+                    <div className="space-y-3">
+                      <Label>Please sign below:</Label>
+                      <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-white">
+                        <SignatureCanvas
+                          ref={(ref) => (signatureRefs.current[selectedFieldData.id] = ref)}
+                          canvasProps={{
+                            width: 350,
+                            height: 150,
+                            className: "w-full h-32 border rounded",
+                          }}
+                          onEnd={() => handleSignature(selectedFieldData.id)}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => clearSignature(selectedFieldData.id)}
+                          className="flex-1"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Clear
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            handleSignature(selectedFieldData.id);
+                            closeFieldModal();
+                          }}
+                          className="flex-1"
+                          disabled={!signatureRefs.current[selectedFieldData.id]}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Confirm
+                        </Button>
+                      </div>
+                    </div>
+                  ) : selectedFieldData.field_type === "checkbox" ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id={selectedFieldData.id}
+                          checked={fieldValues[selectedFieldData.id] === "true"}
+                          onCheckedChange={(checked) => {
+                            handleFieldChange(selectedFieldData.id, checked.toString());
+                            setTimeout(closeFieldModal, 300);
+                          }}
+                          className="w-5 h-5"
+                        />
+                        <Label htmlFor={selectedFieldData.id} className="text-base">
+                          {selectedFieldData.placeholder_text || "Check if applicable"}
+                        </Label>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Label>Enter information:</Label>
+                      <Input
+                        type={selectedFieldData.field_type === "date" ? "date" : "text"}
+                        value={fieldValues[selectedFieldData.id] || ""}
+                        onChange={(e) => handleFieldChange(selectedFieldData.id, e.target.value)}
+                        placeholder={selectedFieldData.placeholder_text || `Enter ${selectedFieldData.field_name.toLowerCase()}`}
+                        className="text-base"
+                        autoFocus
+                      />
+                      <Button
+                        onClick={closeFieldModal}
+                        className="w-full"
+                        disabled={selectedFieldData.is_required && !fieldValues[selectedFieldData.id]}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Confirm
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
