@@ -61,7 +61,6 @@ export function JobApplicationsContent() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState<JobApplicationSortField>('created_at');
   const [sortDirection, setSortDirection] = useState<JobApplicationSortDirection>('desc');
@@ -78,19 +77,10 @@ export function JobApplicationsContent() {
     fetchStatusOptions();
   }, []);
 
-  // Debounce search term to prevent excessive API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
   useEffect(() => {
     setLoading(true);
     fetchApplications();
-  }, [debouncedSearchTerm, statusFilter, sortField, sortDirection, dateRange, page, pageSize]);
+  }, [searchTerm, statusFilter, sortField, sortDirection, dateRange, page, pageSize]);
 
   const fetchStatusOptions = async () => {
     try {
@@ -127,8 +117,8 @@ export function JobApplicationsContent() {
         query = query.lt('created_at', toDate.toISOString());
       }
 
-      if (debouncedSearchTerm.trim().length >= 2) {
-        const term = `%${debouncedSearchTerm.trim()}%`;
+      if (searchTerm.trim().length >= 2) {
+        const term = `%${searchTerm.trim()}%`;
         query = query.or(
           `personal_info->>fullName.ilike.${term},personal_info->>email.ilike.${term},personal_info->>positionAppliedFor.ilike.${term}`
         );
