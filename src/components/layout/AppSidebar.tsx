@@ -138,12 +138,13 @@ export function AppSidebar() {
   const getNavClassName = (path: string) => {
     const active = isActive(path);
     return cn(
-      "group relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-      "hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5",
-      "hover:shadow-sm hover:scale-[1.02]",
+      "group relative flex items-center gap-4 px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-300",
+      "hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:backdrop-blur-sm",
+      "hover:shadow-md hover:scale-[1.02] hover:translate-x-1",
+      "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-0 before:bg-gradient-primary before:rounded-full before:transition-all before:duration-300",
       active
-        ? "bg-gradient-primary text-primary-foreground shadow-glow"
-        : "text-sidebar-foreground hover:text-sidebar-primary"
+        ? "bg-gradient-primary text-primary-foreground shadow-glow-lg before:h-8 translate-x-1"
+        : "text-sidebar-foreground hover:text-sidebar-primary hover:before:h-4"
     );
   };
 
@@ -159,16 +160,17 @@ export function AppSidebar() {
   return (
     <Sidebar
       className={cn(
-        "border-r border-sidebar-border bg-gradient-surface transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "border-r border-sidebar-border/50 bg-gradient-to-b from-sidebar/95 to-sidebar/90 backdrop-blur-xl transition-all duration-500",
+        "shadow-xl shadow-black/5",
+        collapsed ? "w-16" : "w-72"
       )}
       collapsible="icon"
     >
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader className="border-b border-sidebar-border/30 px-6 py-6">
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-primary-glow flex items-center justify-center overflow-hidden animate-glow">
                 {companySettings.logo ? (
                   <img
                     src={companySettings.logo}
@@ -176,14 +178,15 @@ export function AppSidebar() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Shield className="w-5 h-5 text-white" />
+                  <Shield className="w-6 h-6 text-white" />
                 )}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-primary opacity-50 blur-xl" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-sidebar-foreground">
+                <h1 className="text-xl font-bold text-sidebar-foreground bg-gradient-primary bg-clip-text text-transparent">
                   {companySettings.name}
                 </h1>
-                <p className="text-xs text-sidebar-foreground/60">
+                <p className="text-sm text-sidebar-foreground/70 font-medium">
                   {companySettings.tagline}
                 </p>
               </div>
@@ -194,20 +197,20 @@ export function AppSidebar() {
             size="sm"
             onClick={toggleSidebar}
             className={cn(
-              "w-8 h-8 p-0 hover:bg-sidebar-accent",
+              "w-10 h-10 p-0 rounded-xl hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:scale-110 transition-all duration-300",
               collapsed && "mx-auto"
             )}
           >
             {collapsed ? (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5 text-sidebar-foreground" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5 text-sidebar-foreground" />
             )}
           </Button>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className="px-4 py-6">
         {permissionsLoading ? (
           <div className="space-y-4">
             <div className="animate-pulse space-y-2">
@@ -232,21 +235,23 @@ export function AppSidebar() {
           <>
             <SidebarGroup>
               {!collapsed && (
-                <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold mb-2">
+                <SidebarGroupLabel className="text-xs uppercase tracking-widest text-sidebar-foreground/50 font-bold mb-4 px-4">
                   Main Menu
                 </SidebarGroupLabel>
               )}
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-1">
+                <SidebarMenu className="space-y-2">
                   {accessibleNavigationItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={collapsed ? item.title : undefined}>
                         <NavLink to={item.url} className={getNavClassName(item.url)}>
-                          <item.icon className="w-5 h-5 flex-shrink-0" />
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            <item.icon className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                          </div>
                           {!collapsed && (
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium">{item.title}</div>
-                              <div className="text-xs opacity-60 truncate">
+                              <div className="font-semibold text-base">{item.title}</div>
+                              <div className="text-xs text-sidebar-foreground/60 truncate font-medium">
                                 {item.description}
                               </div>
                             </div>
@@ -260,23 +265,25 @@ export function AppSidebar() {
             </SidebarGroup>
 
             {accessibleSettingsItems.length > 0 && (
-              <SidebarGroup className="mt-8">
+              <SidebarGroup className="mt-10">
                 {!collapsed && (
-                  <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold mb-2">
+                  <SidebarGroupLabel className="text-xs uppercase tracking-widest text-sidebar-foreground/50 font-bold mb-4 px-4">
                     Administration
                   </SidebarGroupLabel>
                 )}
                 <SidebarGroupContent>
-                  <SidebarMenu className="space-y-1">
+                  <SidebarMenu className="space-y-2">
                     {accessibleSettingsItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild tooltip={collapsed ? item.title : undefined}>
                           <NavLink to={item.url} className={getNavClassName(item.url)}>
-                            <item.icon className="w-5 h-5 flex-shrink-0" />
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <item.icon className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                            </div>
                             {!collapsed && (
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium">{item.title}</div>
-                                <div className="text-xs opacity-60 truncate">
+                                <div className="font-semibold text-base">{item.title}</div>
+                                <div className="text-xs text-sidebar-foreground/60 truncate font-medium">
                                   {item.description}
                                 </div>
                               </div>
@@ -293,20 +300,21 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-3 py-3 space-y-2">
+      <SidebarFooter className="border-t border-sidebar-border/30 px-4 py-4 space-y-3">
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent/50">
-              <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-gradient-to-r from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/20">
+              <div className="relative w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
+                <span className="text-sm font-bold text-white">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </span>
+                <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-50 blur-lg animate-pulse" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-sidebar-foreground">
+                <div className="text-sm font-bold text-sidebar-foreground">
                   {user?.email || 'Unknown User'}
                 </div>
-                <div className="text-xs text-sidebar-foreground/60 capitalize">
+                <div className="text-xs text-sidebar-foreground/60 capitalize font-medium">
                   {userRole || 'user'}
                 </div>
               </div>
@@ -315,26 +323,27 @@ export function AppSidebar() {
               variant="ghost"
               size="sm"
               onClick={signOut}
-              className="w-full justify-start gap-3 px-3 py-2 text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent"
+              className="w-full justify-start gap-4 px-4 py-3 text-sidebar-foreground hover:text-destructive hover:bg-gradient-to-r hover:from-destructive/10 hover:to-destructive/5 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
             >
-              <LogOut className="w-4 h-4" />
-              Sign Out
+              <LogOut className="w-5 h-5" />
+              <span className="font-semibold">Sign Out</span>
             </Button>
           </>
         ) : (
-          <div className="space-y-2">
-            <div className="w-8 h-8 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
-              <span className="text-sm font-medium text-white">
+          <div className="space-y-3">
+            <div className="relative w-10 h-10 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
+              <span className="text-sm font-bold text-white">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </span>
+              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-50 blur-lg animate-pulse" />
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={signOut}
-              className="w-8 h-8 mx-auto p-0 hover:bg-sidebar-accent"
+              className="w-10 h-10 mx-auto p-0 hover:bg-gradient-to-r hover:from-destructive/10 hover:to-destructive/5 hover:text-destructive rounded-xl transition-all duration-300 hover:scale-110"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-5 h-5" />
             </Button>
           </div>
         )}
