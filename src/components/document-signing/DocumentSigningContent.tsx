@@ -79,30 +79,6 @@ export function DocumentSigningContent() {
                 
               </div>
               
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-1 gap-4 min-w-[280px]">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                    <Badge className="bg-green-100 text-green-700 border-green-200">
-                      {dashboardStats?.completionRate || 0}%
-                    </Badge>
-                  </div>
-                  <p className="text-2xl font-bold text-green-900">{dashboardStats?.completedDocuments || 0}</p>
-                  <p className="text-sm text-green-700">Completed</p>
-                </div>
-                
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Clock className="w-8 h-8 text-blue-600" />
-                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-                      Active
-                    </Badge>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-900">{dashboardStats?.pendingRequests || 0}</p>
-                  <p className="text-sm text-blue-700">Pending</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
