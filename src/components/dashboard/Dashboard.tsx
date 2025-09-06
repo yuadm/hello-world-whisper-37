@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Users, Calendar, FileX, Shield, TrendingUp, Clock, Activity, AlertTriangle, CheckCircle, Zap } from "lucide-react";
-import { EnhancedStatCard } from "./EnhancedStatCard";
+import { Users, Calendar, FileX, Shield, TrendingUp, Clock } from "lucide-react";
+import { StatCard } from "./StatCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentCountryMap } from "./DocumentCountryMap";
@@ -93,217 +93,147 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-mesh">
-      <div className="space-y-8">
-        {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-3xl card-glass p-8 animate-fade-in">
-          <div className="absolute inset-0 bg-gradient-hero opacity-10" />
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-primary-glow flex items-center justify-center animate-float">
-                <Activity className="w-8 h-8 text-white" />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="space-y-2 animate-fade-in">
+        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Welcome back! Here's your HR & Compliance overview
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Employees"
+          value={stats.totalEmployees}
+          description="Active staff members"
+          icon={Users}
+          variant="default"
+          trend={{ value: 12, label: "vs last month" }}
+        />
+        
+        <StatCard
+          title="Leaves This Month"
+          value={stats.leavesThisMonth}
+          description="Approved leave days"
+          icon={Calendar}
+          variant="success"
+          trend={{ value: -5, label: "vs last month" }}
+        />
+        
+        <StatCard
+          title="Expiring Documents"
+          value={stats.expiringDocuments}
+          description="Due within 30 days"
+          icon={FileX}
+          variant="warning"
+          trend={{ value: 3, label: "vs last month" }}
+        />
+        
+        <StatCard
+          title="Compliance Tasks"
+          value={stats.complianceDue}
+          description="Active records"
+          icon={Shield}
+          variant="danger"
+          trend={{ value: -8, label: "vs last month" }}
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card-premium p-6 space-y-4 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Recent Activity</h3>
+              <p className="text-sm text-muted-foreground">Latest system updates</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="w-2 h-2 rounded-full bg-success"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">New employee onboarded</p>
+                <p className="text-xs text-muted-foreground">2 hours ago</p>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="w-2 h-2 rounded-full bg-warning"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Document expiring soon</p>
+                <p className="text-xs text-muted-foreground">5 hours ago</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="w-2 h-2 rounded-full bg-primary"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Compliance task completed</p>
+                <p className="text-xs text-muted-foreground">1 day ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-premium p-6 space-y-4 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Upcoming Deadlines</h3>
+              <p className="text-sm text-muted-foreground">Items requiring attention</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-destructive-soft border border-destructive/20">
               <div>
-                <h1 className="text-5xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  Dashboard
-                </h1>
-                <p className="text-xl text-muted-foreground mt-2">
-                  Welcome back! Here's your HR & Compliance command center
-                </p>
+                <p className="text-sm font-medium text-destructive">BRP Documents Review</p>
+                <p className="text-xs text-muted-foreground">3 documents expiring</p>
               </div>
-            </div>
-            <div className="flex items-center gap-6 pt-4">
-              <div className="flex items-center gap-2 text-success">
-                <CheckCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">System Healthy</span>
-              </div>
-              <div className="flex items-center gap-2 text-primary">
-                <Zap className="w-5 h-5" />
-                <span className="text-sm font-medium">Real-time Updates</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <EnhancedStatCard
-            title="Total Employees"
-            value={stats.totalEmployees}
-            description="Active staff members across all branches"
-            icon={Users}
-            variant="default"
-            trend={{ value: 12, label: "vs last month" }}
-            showGlow={true}
-          />
-          
-          <EnhancedStatCard
-            title="Leaves This Month"
-            value={stats.leavesThisMonth}
-            description="Approved leave requests"
-            icon={Calendar}
-            variant="success"
-            trend={{ value: -5, label: "vs last month" }}
-          />
-          
-          <EnhancedStatCard
-            title="Expiring Documents"
-            value={stats.expiringDocuments}
-            description="Require immediate attention"
-            icon={AlertTriangle}
-            variant="warning"
-            trend={{ value: 3, label: "vs last month" }}
-          />
-          
-          <EnhancedStatCard
-            title="Compliance Tasks"
-            value={stats.complianceDue}
-            description="Active monitoring records"
-            icon={Shield}
-            variant="info"
-            trend={{ value: -8, label: "vs last month" }}
-          />
-        </div>
-
-        {/* Enhanced Dashboard Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2 card-glass p-8 space-y-6 animate-slide-up">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-primary-glow flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">Recent Activity</h3>
-                  <p className="text-muted-foreground">Real-time system updates</p>
-                </div>
-              </div>
-              <div className="px-4 py-2 rounded-full bg-success/10 text-success text-sm font-medium">
-                Live
-              </div>
+              <span className="text-xs font-medium text-destructive">2 days</span>
             </div>
             
-            <div className="space-y-4">
-              <div className="group flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-success/5 to-success/10 border border-success/20 hover:border-success/40 transition-all duration-300">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success to-success/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-success">New employee onboarded</p>
-                  <p className="text-sm text-muted-foreground">Sarah Johnson joined the development team</p>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">2h ago</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-warning-soft border border-warning/20">
+              <div>
+                <p className="text-sm font-medium text-warning">Monthly Compliance Check</p>
+                <p className="text-xs text-muted-foreground">All branches</p>
               </div>
-              
-              <div className="group flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-warning/5 to-warning/10 border border-warning/20 hover:border-warning/40 transition-all duration-300">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <AlertTriangle className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-warning">Document expiring soon</p>
-                  <p className="text-sm text-muted-foreground">3 BRP documents need renewal</p>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">5h ago</span>
-              </div>
-              
-              <div className="group flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/40 transition-all duration-300">
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <CheckCircle className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-primary">Compliance task completed</p>
-                  <p className="text-sm text-muted-foreground">Monthly safety inspection finished</p>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">1d ago</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="card-glass p-8 space-y-6 animate-slide-up">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center animate-pulse">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">Upcoming Deadlines</h3>
-                  <p className="text-muted-foreground">Critical items requiring attention</p>
-                </div>
-              </div>
-              <div className="px-4 py-2 rounded-full bg-warning/10 text-warning text-sm font-medium">
-                Urgent
-              </div>
+              <span className="text-xs font-medium text-warning">1 week</span>
             </div>
             
-            <div className="space-y-4">
-              <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-r from-destructive/10 to-destructive/5 border border-destructive/30 hover:border-destructive/50 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-destructive text-lg">BRP Documents Review</p>
-                    <p className="text-sm text-muted-foreground mt-1">3 documents expiring soon</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-destructive bg-destructive/20 animate-pulse">
-                      2 days
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-destructive/20 to-destructive/40" />
+            <div className="flex items-center justify-between p-3 rounded-lg bg-primary-soft border border-primary/20">
+              <div>
+                <p className="text-sm font-medium text-primary">Employee Review Cycle</p>
+                <p className="text-xs text-muted-foreground">Q1 evaluations</p>
               </div>
-              
-              <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-r from-warning/10 to-warning/5 border border-warning/30 hover:border-warning/50 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-warning text-lg">Monthly Compliance Check</p>
-                    <p className="text-sm text-muted-foreground mt-1">All branches scheduled</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-warning bg-warning/20">
-                      1 week
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-warning/20 to-warning/40" />
-              </div>
-              
-              <div className="group relative overflow-hidden p-5 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 hover:border-primary/50 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-primary text-lg">Employee Review Cycle</p>
-                    <p className="text-sm text-muted-foreground mt-1">Q1 performance evaluations</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-primary bg-primary/20">
-                      2 weeks
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/20 to-primary/40" />
-              </div>
+              <span className="text-xs font-medium text-primary">2 weeks</span>
             </div>
           </div>
-
-          {/* Documents by Country - Enhanced */}
-          <section aria-labelledby="documents-by-country" className="lg:col-span-2 xl:col-span-3 card-glass p-8 space-y-6 animate-slide-up">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <FileX className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 id="documents-by-country" className="text-2xl font-bold">Documents by Country</h2>
-                  <p className="text-muted-foreground">Interactive world map of document distribution</p>
-                </div>
-              </div>
-              <div className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                Global View
-              </div>
-            </div>
-            <div className="rounded-2xl overflow-hidden border border-border/50">
-              <DocumentCountryMap />
-            </div>
-          </section>
         </div>
+
+        {/* Documents by Country */}
+        <section aria-labelledby="documents-by-country" className="card-premium p-6 space-y-4 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+              <FileX className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 id="documents-by-country" className="text-lg font-semibold">Documents by Country</h2>
+              <p className="text-sm text-muted-foreground">Interactive world map of document distribution</p>
+            </div>
+          </div>
+          <DocumentCountryMap />
+        </section>
       </div>
     </div>
   );

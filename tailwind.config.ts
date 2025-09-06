@@ -82,23 +82,15 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
-				'gradient-primary-glow': 'var(--gradient-primary-glow)',
 				'gradient-surface': 'var(--gradient-surface)',
 				'gradient-subtle': 'var(--gradient-subtle)',
-				'gradient-card': 'var(--gradient-card)',
-				'gradient-hero': 'var(--gradient-hero)',
-				'gradient-glass': 'var(--gradient-glass)',
-				'gradient-mesh': 'var(--gradient-mesh)'
+				'gradient-card': 'var(--gradient-card)'
 			},
 			boxShadow: {
 				'sm': 'var(--shadow-sm)',
 				'md': 'var(--shadow-md)',
 				'lg': 'var(--shadow-lg)',
-				'xl': 'var(--shadow-xl)',
-				'glow': 'var(--shadow-glow)',
-				'glow-lg': 'var(--shadow-glow-lg)',
-				'glass': 'var(--shadow-glass)',
-				'inset': 'var(--shadow-inset)'
+				'glow': 'var(--shadow-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
